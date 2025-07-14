@@ -1,0 +1,22 @@
+# Temporary files
+tmp/
+
+# Deno cache
+.deno/
+
+# Environment files
+.env
+.env.local
+
+# Log files
+*.log
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
