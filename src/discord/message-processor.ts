@@ -7,9 +7,9 @@ import { Logger } from "../utils/logger.ts";
  */
 export interface ThreadContext {
   messages: Array<{
-    author: string;     // 発言者の名前
-    content: string;    // メッセージ内容
-    timestamp: string;  // 投稿時刻（ISO形式）
+    author: string; // 発言者の名前
+    content: string; // メッセージ内容
+    timestamp: string; // 投稿時刻（ISO形式）
   }>;
 }
 
@@ -35,26 +35,33 @@ export class MessageProcessor {
    */
   async getThreadHistory(msg: Message): Promise<ThreadContext> {
     this.logger.info("スレッド履歴を取得中");
-    
+
     try {
       const channel = msg.channel;
-      const fetchedMessages = await this.fetchChannelMessages(channel, msg, CONFIG.MAX_HISTORY_MESSAGES);
-      
+      const fetchedMessages = await this.fetchChannelMessages(
+        channel,
+        msg,
+        CONFIG.MAX_HISTORY_MESSAGES,
+      );
+
       if (fetchedMessages.length > 0) {
-        this.logger.info(`履歴から${fetchedMessages.length}件のメッセージを取得しました`);
+        this.logger.info(
+          `履歴から${fetchedMessages.length}件のメッセージを取得しました`,
+        );
         return {
           messages: fetchedMessages.map((m: Message) => ({
-            author: m.author.username || m.author.tag || 'Unknown',
-            content: m.content || '',
+            author: m.author.username || m.author.tag || "Unknown",
+            content: m.content || "",
             timestamp: m.createdAt.toISOString(),
-          }))
+          })),
         };
       }
-      
-      // フォールバック: 現在のメッセージのみ
-      this.logger.warn("履歴を取得できませんでした。現在のメッセージのみを使用します");
-      return this.createFallbackContext(msg);
 
+      // フォールバック: 現在のメッセージのみ
+      this.logger.warn(
+        "履歴を取得できませんでした。現在のメッセージのみを使用します",
+      );
+      return this.createFallbackContext(msg);
     } catch (error) {
       this.logger.error(`スレッド履歴の取得に失敗しました: ${error}`);
       return this.createFallbackContext(msg);
@@ -69,17 +76,22 @@ export class MessageProcessor {
    * @param limit 取得する最大メッセージ数
    * @returns 取得できたメッセージ配列
    */
-  private async fetchChannelMessages(channel: any, currentMsg: Message, limit: number): Promise<Message[]> {
+  private async fetchChannelMessages(
+    // deno-lint-ignore no-explicit-any
+    channel: any, // Harmony ライブラリのAPI変更に対応するため、動的に型チェック
+    currentMsg: Message,
+    limit: number,
+  ): Promise<Message[]> {
     // パターン1: fetchMessages with options object
-    if (typeof channel.fetchMessages === 'function') {
+    if (typeof channel.fetchMessages === "function") {
       try {
         this.logger.debug("Trying fetchMessages with options object");
         const result = await channel.fetchMessages({
           limit: Math.min(limit, 100),
-          before: currentMsg.id
+          before: currentMsg.id,
         });
-        
-        if (result && typeof result.array === 'function') {
+
+        if (result && typeof result.array === "function") {
           const messages = result.array().reverse(); // 時系列順に並び替え
           messages.push(currentMsg); // 現在のメッセージを最後に追加
           return messages;
@@ -90,14 +102,16 @@ export class MessageProcessor {
     }
 
     // パターン2: fetchMessages with number parameter
-    if (typeof channel.fetchMessages === 'function') {
+    if (typeof channel.fetchMessages === "function") {
       try {
         this.logger.debug("Trying fetchMessages with number parameter");
         const result = await channel.fetchMessages(Math.min(limit, 100));
-        
-        if (result && typeof result.array === 'function') {
+
+        if (result && typeof result.array === "function") {
           const messages = result.array().reverse();
-          return messages.filter((m: Message) => m.id !== currentMsg.id).concat([currentMsg]);
+          return messages.filter((m: Message) => m.id !== currentMsg.id).concat(
+            [currentMsg],
+          );
         }
       } catch (error) {
         this.logger.debug(`fetchMessages with number failed: ${error}`);
@@ -105,7 +119,7 @@ export class MessageProcessor {
     }
 
     // パターン3: messages manager直接アクセス
-    if (channel.messages && typeof channel.messages.fetch === 'function') {
+    if (channel.messages && typeof channel.messages.fetch === "function") {
       try {
         this.logger.debug("Trying messages.fetch");
         // 現在キャッシュされているメッセージを取得
@@ -125,10 +139,10 @@ export class MessageProcessor {
   private createFallbackContext(msg: Message): ThreadContext {
     return {
       messages: [{
-        author: msg.author.username || msg.author.tag || 'Unknown',
-        content: msg.content || '',
+        author: msg.author.username || msg.author.tag || "Unknown",
+        content: msg.content || "",
         timestamp: msg.createdAt.toISOString(),
-      }]
+      }],
     };
   }
 
@@ -140,7 +154,7 @@ export class MessageProcessor {
    */
   buildPrompt(context: ThreadContext): string {
     const messageCount = context.messages.length;
-    
+
     if (messageCount === 1) {
       // 単一メッセージの場合はシンプルなプロンプト
       const currentMessage = context.messages[0];
@@ -158,10 +172,10 @@ export class MessageProcessor {
       .map((msg, index) => {
         const timeStr = this.formatTimestamp(msg.timestamp);
         const isLatest = index === context.messages.length - 1;
-        const prefix = isLatest ? '→' : ' ';
+        const prefix = isLatest ? "→" : " ";
         return `${prefix} [${timeStr}] ${msg.author}: ${msg.content}`;
       })
-      .join('\n');
+      .join("\n");
 
     return `以下はDiscordスレッドの会話履歴です（${messageCount}件のメッセージ）。最新のメッセージ（→印）に対して、会話の文脈を踏まえて適切に応答してください。
 
@@ -174,13 +188,13 @@ ${messageHistory}
   private formatTimestamp(isoString: string): string {
     try {
       const date = new Date(isoString);
-      return date.toLocaleTimeString('ja-JP', { 
-        hour12: false, 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      return date.toLocaleTimeString("ja-JP", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
-      return isoString.split('T')[1]?.split('.')[0] || isoString;
+      return isoString.split("T")[1]?.split(".")[0] || isoString;
     }
   }
 
@@ -195,15 +209,14 @@ ${messageHistory}
 
     try {
       const mentionResponse = `<@${msg.author.id}> ${response}`;
-      
+
       if (mentionResponse.length <= CONFIG.MAX_MESSAGE_LENGTH) {
         await msg.reply(mentionResponse);
       } else {
         await this.sendSplitMessage(msg, response);
       }
-      
+
       this.logger.info("応答を正常に送信しました");
-      
     } catch (error) {
       this.logger.error(`応答の送信に失敗しました: ${error}`);
       throw error;
@@ -216,19 +229,22 @@ ${messageHistory}
    * @param msg 元のメッセージ
    * @param response 分割する応答内容
    */
-  private async sendSplitMessage(msg: Message, response: string): Promise<void> {
+  private async sendSplitMessage(
+    msg: Message,
+    response: string,
+  ): Promise<void> {
     const chunks = this.splitMessage(response);
-    
+
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       const prefix = i === 0 ? `<@${msg.author.id}> ` : "(続き) ";
-      
+
       if (i === 0) {
         await msg.reply(prefix + chunk);
       } else {
         await msg.channel.send(prefix + chunk);
       }
-      
+
       await this.delay(1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND);
     }
   }
@@ -242,38 +258,40 @@ ${messageHistory}
   private splitMessage(message: string): string[] {
     const chunks: string[] = [];
     let currentChunk = "";
-    
-    const lines = message.split('\n');
-    
+
+    const lines = message.split("\n");
+
     for (const line of lines) {
       if (currentChunk.length + line.length + 1 > CONFIG.MAX_MESSAGE_LENGTH) {
         if (currentChunk) {
           chunks.push(currentChunk.trim());
           currentChunk = "";
         }
-        
+
         if (line.length > CONFIG.MAX_MESSAGE_LENGTH) {
-          const words = line.split(' ');
+          const words = line.split(" ");
           for (const word of words) {
-            if (currentChunk.length + word.length + 1 > CONFIG.MAX_MESSAGE_LENGTH) {
+            if (
+              currentChunk.length + word.length + 1 > CONFIG.MAX_MESSAGE_LENGTH
+            ) {
               chunks.push(currentChunk.trim());
               currentChunk = word;
             } else {
-              currentChunk += (currentChunk ? ' ' : '') + word;
+              currentChunk += (currentChunk ? " " : "") + word;
             }
           }
         } else {
           currentChunk = line;
         }
       } else {
-        currentChunk += (currentChunk ? '\n' : '') + line;
+        currentChunk += (currentChunk ? "\n" : "") + line;
       }
     }
-    
+
     if (currentChunk) {
       chunks.push(currentChunk.trim());
     }
-    
+
     return chunks;
   }
 
@@ -284,6 +302,6 @@ ${messageHistory}
    * @returns Promise that resolves after the delay
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

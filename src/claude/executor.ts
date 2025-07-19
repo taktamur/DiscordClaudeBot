@@ -24,7 +24,7 @@ export class ClaudeExecutor {
    */
   async execute(prompt: string): Promise<string> {
     this.logger.info("Claude Code CLIを実行中");
-    
+
     try {
       // Claude Code CLI コマンドを設定
       // --dangerously-skip-permissions: 権限確認をスキップ（自動実行のため）
@@ -39,7 +39,11 @@ export class ClaudeExecutor {
       // 長時間の複雑な処理にも対応できるよう余裕を持った設定
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error(`Claude execution timed out after ${CONFIG.CLAUDE_TIMEOUT_SECONDS} seconds`));
+          reject(
+            new Error(
+              `Claude execution timed out after ${CONFIG.CLAUDE_TIMEOUT_SECONDS} seconds`,
+            ),
+          );
         }, CONFIG.CLAUDE_TIMEOUT_SECONDS * 1000);
       });
 
@@ -59,7 +63,6 @@ export class ClaudeExecutor {
 
       this.logger.info("Claude Codeの実行が正常に完了しました");
       return stdout.trim();
-
     } catch (error) {
       this.logger.error(`Claude実行エラー: ${error}`);
       throw error;

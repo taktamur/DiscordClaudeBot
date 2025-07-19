@@ -15,10 +15,11 @@ const logger = new Logger();
  * @returns 解析されたオプション
  */
 function parseCommandLineArgs(): { timeoutSeconds?: number } {
-  const timeoutIndex = Deno.args.indexOf('--timeout');
-  const timeoutSeconds = timeoutIndex !== -1 ? 
-    parseInt(Deno.args[timeoutIndex + 1]) : undefined;
-  
+  const timeoutIndex = Deno.args.indexOf("--timeout");
+  const timeoutSeconds = timeoutIndex !== -1
+    ? parseInt(Deno.args[timeoutIndex + 1])
+    : undefined;
+
   return { timeoutSeconds };
 }
 

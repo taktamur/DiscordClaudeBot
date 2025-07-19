@@ -1,4 +1,4 @@
-import { Client, Message, GatewayIntents } from "../deps.ts";
+import { Client, GatewayIntents, Message } from "../deps.ts";
 import { CONFIG } from "./config.ts";
 import { ClaudeExecutor } from "./claude/executor.ts";
 import { MessageProcessor } from "./discord/message-processor.ts";
@@ -26,15 +26,15 @@ export class DiscordBot {
     // Discord クライアントの初期化（必要な権限を指定）
     this.client = new Client({
       intents: [
-        GatewayIntents.GUILDS,          // サーバー情報の取得
-        GatewayIntents.GUILD_MESSAGES,  // メッセージの受信
+        GatewayIntents.GUILDS, // サーバー情報の取得
+        GatewayIntents.GUILD_MESSAGES, // メッセージの受信
         GatewayIntents.MESSAGE_CONTENT, // メッセージ内容の取得（2022年以降必須）
       ],
     });
     this.claudeExecutor = new ClaudeExecutor();
     this.messageProcessor = new MessageProcessor();
     this.logger = new Logger();
-    
+
     this.setupEventHandlers();
   }
 
@@ -44,12 +44,14 @@ export class DiscordBot {
    */
   private setupEventHandlers(): void {
     // ボット起動完了時の処理
-    this.client.on('ready', () => {
-      this.logger.info(`ボットが${this.client.user?.username}としてログインしました`);
+    this.client.on("ready", () => {
+      this.logger.info(
+        `ボットが${this.client.user?.username}としてログインしました`,
+      );
     });
 
     // メッセージ受信時の処理
-    this.client.on('messageCreate', async (msg: Message) => {
+    this.client.on("messageCreate", async (msg: Message) => {
       if (this.shouldProcessMessage(msg)) {
         await this.handleMention(msg);
       }
@@ -62,8 +64,8 @@ export class DiscordBot {
    * @returns 処理すべき場合 true、そうでなければ false
    */
   private shouldProcessMessage(msg: Message): boolean {
-    return !msg.author.bot &&  // ボットからのメッセージは無視
-           msg.mentions.users.has(this.client.user?.id || "");  // このボットへのメンションのみ処理
+    return !msg.author.bot && // ボットからのメッセージは無視
+      msg.mentions.users.has(this.client.user?.id || ""); // このボットへのメンションのみ処理
   }
 
   /**
@@ -74,22 +76,23 @@ export class DiscordBot {
   private async handleMention(msg: Message): Promise<void> {
     try {
       this.logger.info(`${msg.author.username}からのメンションを処理中`);
-      
+
       // 1. スレッドの会話履歴を取得
       const context = await this.messageProcessor.getThreadHistory(msg);
-      
+
       // 2. Claude Code 用のプロンプトを構築
       const prompt = this.messageProcessor.buildPrompt(context);
-      
+
       // 3. Claude Code を実行して応答を取得
       const response = await this.claudeExecutor.execute(prompt);
-      
+
       // 4. Discord に応答を送信（分割投稿対応）
       await this.messageProcessor.sendResponse(msg, response);
-      
     } catch (error) {
       this.logger.error(`メンション処理エラー: ${error}`);
-      await msg.reply("エラーが発生しました。しばらく時間をおいて再度お試しください。");
+      await msg.reply(
+        "エラーが発生しました。しばらく時間をおいて再度お試しください。",
+      );
     }
   }
 

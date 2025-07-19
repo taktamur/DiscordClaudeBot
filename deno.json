@@ -7,16 +7,12 @@
     "check": "deno check main.ts"
   },
   "fmt": {
-    "files": {
-      "include": ["src/", "main.ts"],
-      "exclude": ["tmp/"]
-    }
+    "include": ["src/", "main.ts"],
+    "exclude": ["tmp/"]
   },
   "lint": {
-    "files": {
-      "include": ["src/", "main.ts"],
-      "exclude": ["tmp/"]
-    }
+    "include": ["src/", "main.ts"],
+    "exclude": ["tmp/"]
   },
   "imports": {
     "@harmony/harmony": "jsr:@harmony/harmony"
