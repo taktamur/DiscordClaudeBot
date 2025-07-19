@@ -13,7 +13,7 @@ export class ClaudeExecutor {
     
     try {
       const cmd = new Deno.Command("claude", {
-        args: ["-p", prompt],
+        args: ["--dangerously-skip-permissions", "-p", prompt],
         stdout: "piped",
         stderr: "piped",
       });
