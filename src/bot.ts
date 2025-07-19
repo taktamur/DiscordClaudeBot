@@ -17,6 +17,12 @@ export class DiscordBot {
   private messageProcessor: MessageProcessor;
   /** ログ出力部 */
   private logger: Logger;
+  /** テストモードフラグ */
+  private isTestMode: boolean = false;
+  /** 処理中のメッセージIDを追跡（重複防止用） */
+  private processingMessages = new Set<string>();
+  /** 最後のメッセージ送信時刻（レート制限用） */
+  private lastMessageTime = 0;
 
   /**
    * DiscordBot のコンストラクタ
@@ -52,8 +58,19 @@ export class DiscordBot {
 
     // メッセージ受信時の処理
     this.client.on("messageCreate", async (msg: Message) => {
+      this.logger.info(`メッセージ受信: ${msg.author.username}: ${msg.content.substring(0, 50)}...`);
+      
+      // 重複処理防止チェック
+      if (this.processingMessages.has(msg.id)) {
+        this.logger.info("既に処理中のメッセージのためスキップ");
+        return;
+      }
+      
       if (this.shouldProcessMessage(msg)) {
+        this.logger.info("メンション検知 - 処理開始");
         await this.handleMention(msg);
+      } else {
+        this.logger.info("メンション対象外 - 処理スキップ");
       }
     });
   }
@@ -64,8 +81,33 @@ export class DiscordBot {
    * @returns 処理すべき場合 true、そうでなければ false
    */
   private shouldProcessMessage(msg: Message): boolean {
-    return !msg.author.bot && // ボットからのメッセージは無視
-      msg.mentions.users.has(this.client.user?.id || ""); // このボットへのメンションのみ処理
+    const isBot = msg.author.bot;
+    const botId = this.client.user?.id || "";
+    const isOwnMessage = msg.author.id === botId;
+    
+    // 【重要】自分のメッセージは絶対に処理しない（無限ループ防止）
+    if (isOwnMessage) {
+      this.logger.info("自分のメッセージのため処理をスキップ");
+      return false;
+    }
+    
+    // メンション検知: Harmonyの解析結果 + 文字列パターンマッチング
+    const hasMentionObj = msg.mentions.users.has(botId);
+    const hasMentionText = msg.content.includes(`<@${botId}>`);
+    const hasMention = hasMentionObj || hasMentionText;
+    
+    // デバッグ用: メンションオブジェクトの詳細
+    const mentionedUsers = Array.from(msg.mentions.users.keys());
+    this.logger.info(`メンション詳細: users=[${mentionedUsers.join(",")}], mentionObj=${hasMentionObj}, mentionText=${hasMentionText}, content="${msg.content}"`);
+    this.logger.info(`メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`);
+    
+    // 他のボットメッセージは通常時は除外（テストモード時のみ例外）
+    if (isBot && !this.isTestMode) {
+      this.logger.info("他のボットメッセージのため処理をスキップ");
+      return false;
+    }
+    
+    return hasMention;
   }
 
   /**
@@ -74,8 +116,14 @@ export class DiscordBot {
    * @param msg メンション元のメッセージ
    */
   private async handleMention(msg: Message): Promise<void> {
+    // 処理中としてマーク
+    this.processingMessages.add(msg.id);
+    
     try {
       this.logger.info(`${msg.author.username}からのメンションを処理中`);
+
+      // レート制限チェック
+      await this.enforceRateLimit();
 
       // 1. スレッドの会話履歴を取得
       const context = await this.messageProcessor.getThreadHistory(msg);
@@ -88,11 +136,36 @@ export class DiscordBot {
 
       // 4. Discord に応答を送信（分割投稿対応）
       await this.messageProcessor.sendResponse(msg, response);
+      this.lastMessageTime = Date.now();
     } catch (error) {
       this.logger.error(`メンション処理エラー: ${error}`);
-      await msg.reply(
-        "エラーが発生しました。しばらく時間をおいて再度お試しください。",
-      );
+      try {
+        await this.enforceRateLimit();
+        await msg.reply(
+          "エラーが発生しました。しばらく時間をおいて再度お試しください。",
+        );
+        this.lastMessageTime = Date.now();
+      } catch (replyError) {
+        this.logger.error(`エラー応答の送信に失敗: ${replyError}`);
+      }
+    } finally {
+      // 処理完了後にマークを削除
+      this.processingMessages.delete(msg.id);
+    }
+  }
+
+  /**
+   * レート制限を強制する
+   * 前回のメッセージ送信から一定時間経過していない場合は待機
+   */
+  private async enforceRateLimit(): Promise<void> {
+    const minInterval = 1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND;
+    const elapsed = Date.now() - this.lastMessageTime;
+    
+    if (elapsed < minInterval) {
+      const waitTime = minInterval - elapsed;
+      this.logger.info(`レート制限のため ${waitTime}ms 待機中`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
 
@@ -113,5 +186,22 @@ export class DiscordBot {
    */
   async stop(): Promise<void> {
     await this.client.destroy();
+  }
+
+  /**
+   * Discord クライアントインスタンスを取得（テスト用）
+   * @returns Discord クライアントインスタンス
+   */
+  getClient(): Client {
+    return this.client;
+  }
+
+  /**
+   * テストモードを設定
+   * @param isTestMode テストモードの有効/無効
+   */
+  setTestMode(isTestMode: boolean): void {
+    this.isTestMode = isTestMode;
+    this.logger.info(`テストモード設定: ${isTestMode}`);
   }
 }

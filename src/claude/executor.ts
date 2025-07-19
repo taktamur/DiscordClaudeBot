@@ -24,6 +24,7 @@ export class ClaudeExecutor {
    */
   async execute(prompt: string): Promise<string> {
     this.logger.info("Claude Code CLIを実行中");
+    this.logger.info(`送信プロンプト: ${prompt.substring(0, 200)}${prompt.length > 200 ? '...' : ''}`);
 
     try {
       // Claude Code CLI コマンドを設定
@@ -55,13 +56,19 @@ export class ClaudeExecutor {
       const stdout = new TextDecoder().decode(result.stdout);
       const stderr = new TextDecoder().decode(result.stderr);
 
+      // デバッグ用にstderrも出力（エラーでなくても警告等が出力される場合がある）
+      if (stderr.trim()) {
+        this.logger.info(`Claude CLI stderr: ${stderr.trim()}`);
+      }
+
       // 実行結果をチェックしてエラーハンドリング
       if (!result.success) {
-        this.logger.error(`Claude CLIが失敗しました: ${stderr}`);
+        this.logger.error(`Claude CLIが失敗しました (exit code: ${result.code}): ${stderr}`);
         throw new Error(`Claude execution failed: ${stderr}`);
       }
 
       this.logger.info("Claude Codeの実行が正常に完了しました");
+      this.logger.info(`受信レスポンス: ${stdout.substring(0, 200)}${stdout.length > 200 ? '...' : ''}`);
       return stdout.trim();
     } catch (error) {
       this.logger.error(`Claude実行エラー: ${error}`);
