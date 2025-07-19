@@ -23,6 +23,8 @@ export class DiscordBot {
   private processingMessages = new Set<string>();
   /** 最後のメッセージ送信時刻（レート制限用） */
   private lastMessageTime = 0;
+  /** 最近送信したメッセージのハッシュ（重複防止用） */
+  private recentMessageHashes = new Set<string>();
 
   /**
    * DiscordBot のコンストラクタ
@@ -89,9 +91,16 @@ export class DiscordBot {
     const botId = this.client.user?.id || "";
     const isOwnMessage = msg.author.id === botId;
 
-    // 【重要】自分のメッセージは絶対に処理しない（無限ループ防止）
-    if (isOwnMessage) {
+    // 【重要】自分のメッセージは通常時は処理しない（無限ループ防止）
+    // ただし、テストモード時は自己メンションテストのため処理する
+    if (isOwnMessage && !this.isTestMode) {
       this.logger.info("自分のメッセージのため処理をスキップ");
+      return false;
+    }
+
+    // 他のボットメッセージは通常時は除外（テストモード時のみ例外）
+    if (isBot && !this.isTestMode) {
+      this.logger.info("他のボットメッセージのため処理をスキップ");
       return false;
     }
 
@@ -110,12 +119,6 @@ export class DiscordBot {
     this.logger.info(
       `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`,
     );
-
-    // 他のボットメッセージは通常時は除外（テストモード時のみ例外）
-    if (isBot && !this.isTestMode) {
-      this.logger.info("他のボットメッセージのため処理をスキップ");
-      return false;
-    }
 
     return hasMention;
   }
@@ -149,11 +152,33 @@ export class DiscordBot {
       this.lastMessageTime = Date.now();
     } catch (error) {
       this.logger.error(`メンション処理エラー: ${error}`);
+
+      // エラーの種類を判定してより詳細なメッセージを送信
+      let errorMessage =
+        "エラーが発生しました。しばらく時間をおいて再度お試しください。";
+
+      if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          errorMessage =
+            "処理がタイムアウトしました。複雑な内容の場合、時間をおいて再度お試しください。";
+        } else if (error.message.includes("Empty response")) {
+          errorMessage =
+            "応答が空でした。プロンプトを変更して再度お試しください。";
+        } else if (error.message.includes("Claude execution failed")) {
+          errorMessage =
+            "Claude実行エラーが発生しました。システム管理者にお問い合わせください。";
+        }
+
+        // デバッグ用に詳細なエラー情報をログに記録
+        this.logger.error(`エラー詳細: ${error.name}: ${error.message}`);
+        if (error.stack) {
+          this.logger.error(`スタックトレース: ${error.stack}`);
+        }
+      }
+
       try {
         await this.enforceRateLimit();
-        await msg.reply(
-          "エラーが発生しました。しばらく時間をおいて再度お試しください。",
-        );
+        await msg.reply(errorMessage);
         this.lastMessageTime = Date.now();
       } catch (replyError) {
         this.logger.error(`エラー応答の送信に失敗: ${replyError}`);

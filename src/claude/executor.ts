@@ -35,6 +35,10 @@ export class ClaudeExecutor {
     );
 
     try {
+      this.logger.info(
+        `コマンド引数: ["--dangerously-skip-permissions", "-p", "プロンプト(${prompt.length}文字)"]`,
+      );
+
       // タイムアウト処理を設定（30分）
       // 長時間の複雑な処理にも対応できるよう余裕を持った設定
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -59,7 +63,9 @@ export class ClaudeExecutor {
         stderr: "piped",
       });
 
+      this.logger.info("Claude Code実行開始...");
       const result = await Promise.race([executionPromise, timeoutPromise]);
+      this.logger.info("Claude Code実行完了");
 
       // 実行結果を文字列に変換
       const stdout = new TextDecoder().decode(result.stdout);
@@ -75,6 +81,8 @@ export class ClaudeExecutor {
         this.logger.error(
           `Claude CLIが失敗しました (exit code: ${result.code}): ${stderr}`,
         );
+        this.logger.error(`stdout: ${stdout}`);
+        this.logger.error(`プロンプト長: ${prompt.length}`);
         throw new Error(`Claude execution failed: ${stderr}`);
       }
 
@@ -84,7 +92,15 @@ export class ClaudeExecutor {
           stdout.length > 200 ? "..." : ""
         }`,
       );
-      return stdout.trim();
+
+      // 空の応答の場合はエラーとして扱う
+      const response = stdout.trim();
+      if (!response) {
+        this.logger.error("Claude Codeから空の応答を受信しました");
+        throw new Error("Empty response from Claude Code");
+      }
+
+      return response;
     } catch (error) {
       this.logger.error(`Claude実行エラー: ${error}`);
       throw error;

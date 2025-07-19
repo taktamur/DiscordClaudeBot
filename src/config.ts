@@ -19,8 +19,8 @@ export const CONFIG = {
   /** 取得するスレッド履歴の最大メッセージ数 */
   MAX_HISTORY_MESSAGES: 50,
 
-  /** レート制限：1秒あたりのメッセージ送信数上限 */
-  RATE_LIMIT_MESSAGES_PER_SECOND: 5,
+  /** レート制限：1秒あたりのメッセージ送信数上限（Discord API制限対応） */
+  RATE_LIMIT_MESSAGES_PER_SECOND: 1,
 } as const;
 
 /**
