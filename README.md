@@ -142,10 +142,14 @@ const result = await cmd.output();
 ### 🎯 動作確認済み機能
 - ✅ **Discord Bot接続** - Token認証・ログイン成功
 - ✅ **メンション検知** - @ボット名 での反応確認
-- ✅ **Claude CLI実行** - claude -p コマンド実行成功（約5秒）
+- ✅ **スレッド履歴取得** - 最大50件のメッセージ履歴取得（7件取得確認済み）
+- ✅ **会話文脈理解** - 時系列順の会話履歴をClaude Codeに提供
+- ✅ **Claude CLI実行** - claude -p コマンド実行成功（履歴込み約7秒）
 - ✅ **Discord応答** - メッセージ送信機能動作
 
 ### 📊 テスト結果
+
+**基本動作テスト（フェーズ1）**:
 ```
 [2025-07-19T00:36:08] INFO: Processing mention from ahirunotamura
 [2025-07-19T00:36:08] INFO: Using current message as context
@@ -153,16 +157,34 @@ const result = await cmd.output();
 [2025-07-19T00:36:14] INFO: Response sent successfully
 ```
 
+**履歴取得機能テスト（フェーズ2）**:
+```
+[2025-07-19T00:47:30] INFO: Processing mention from ahirunotamura
+[2025-07-19T00:47:30] INFO: Fetching thread history
+[2025-07-19T00:47:30] DEBUG: Trying fetchMessages with options object
+[2025-07-19T00:47:31] INFO: Fetched 7 messages from history
+[2025-07-19T00:47:31] INFO: Executing Claude Code CLI
+[2025-07-19T00:47:38] INFO: Claude Code execution completed successfully
+[2025-07-19T00:47:38] INFO: Response sent successfully
+```
+
 ### 🔧 現在の実装状態
 - **実行コマンド**: `deno task dev` (30秒タイムアウト) / `deno task start` (永続実行)
 - **権限設定**: `--allow-net --allow-env --allow-run --allow-read --env-file=.env`
-- **メッセージ履歴**: 現在のメッセージのみ（シンプル実装）
+- **メッセージ履歴**: 最大50件の会話履歴取得対応（マルチパターンAPI実装）
+- **プロンプト形式**: 単一/複数メッセージで最適化されたフォーマット
+- **エラーハンドリング**: フォールバック機能付き堅牢な実装
+
+### ✅ フェーズ2完了 - 会話履歴機能
+1. ✅ **Harmony API調査** - 3パターンのメッセージ取得方法特定
+2. ✅ **履歴取得実装** - fetchMessages with options object で動作確認
+3. ✅ **データ整理処理** - 時系列順・フォーマット最適化
+4. ✅ **動作テスト** - 7件履歴取得成功、処理時間8秒
 
 ### 📋 次のステップ
-1. ⏳ **フェーズ2**: スレッド履歴取得機能の拡張
-2. ⏳ **エラーハンドリング強化**
-3. ⏳ **メッセージ分割投稿テスト**
-4. ⏳ **パフォーマンス最適化**
+1. ⏳ **フェーズ3**: エラーハンドリング強化・長文分割投稿テスト
+2. ⏳ **パフォーマンス最適化** - レスポンス時間短縮
+3. ⏳ **運用機能追加** - ログ管理・監視機能
 
 ## ⚠️ 注意事項
 
