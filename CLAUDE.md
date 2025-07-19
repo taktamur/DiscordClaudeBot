@@ -79,6 +79,27 @@ deno run --allow-net --allow-env bot.ts
 - 長時間処理時のDiscord応答方法（タイピング表示等）
 - コンテキスト長制限への対応
 
+## 実装済み機能
+
+### メンション機能
+- 返信時に自動で`<@ユーザーID>`メンションを付与
+- 分割メッセージでは最初のメッセージにのみメンション追加
+
+### タイムアウト設定
+- Claude Code CLI実行タイムアウト: 1800秒（30分）
+- 長時間の複雑な処理にも対応可能
+
+### 設定項目 (src/config.ts)
+```typescript
+export const CONFIG = {
+  DISCORD_TOKEN: Deno.env.get("DISCORD_BOT_TOKEN") || "",
+  CLAUDE_TIMEOUT_SECONDS: 1800,  // 30分
+  MAX_MESSAGE_LENGTH: 2000,
+  MAX_HISTORY_MESSAGES: 50,
+  RATE_LIMIT_MESSAGES_PER_SECOND: 5,
+} as const;
+```
+
 ## 実装計画
 
 ### フェーズ1: 基盤設定（高優先度）

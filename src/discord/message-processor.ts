@@ -158,8 +158,10 @@ ${messageHistory}
     this.logger.info("Sending response to Discord");
 
     try {
-      if (response.length <= CONFIG.MAX_MESSAGE_LENGTH) {
-        await msg.reply(response);
+      const mentionResponse = `<@${msg.author.id}> ${response}`;
+      
+      if (mentionResponse.length <= CONFIG.MAX_MESSAGE_LENGTH) {
+        await msg.reply(mentionResponse);
       } else {
         await this.sendSplitMessage(msg, response);
       }
@@ -177,7 +179,7 @@ ${messageHistory}
     
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const prefix = i === 0 ? "" : "(続き) ";
+      const prefix = i === 0 ? `<@${msg.author.id}> ` : "(続き) ";
       
       if (i === 0) {
         await msg.reply(prefix + chunk);
