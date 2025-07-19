@@ -43,6 +43,34 @@ client.on('messageCreate', (msg: Message): void => {
 ### プロセス実行
 Deno.Command APIを使用してClaude Code CLIを実行する。
 
+### 開発・動作確認方式
+Bot は event loop で永続実行されるため、コマンド引数によるタイムアウト制御を実装する：
+
+```typescript
+// コマンド引数解析
+const timeoutIndex = Deno.args.indexOf('--timeout');
+const timeoutSeconds = timeoutIndex !== -1 ? 
+  parseInt(Deno.args[timeoutIndex + 1]) : null;
+
+// タイムアウト設定
+if (timeoutSeconds) {
+  setTimeout(() => {
+    console.log("タイムアウトにより終了");
+    client.destroy();
+    Deno.exit(0);
+  }, timeoutSeconds * 1000);
+}
+```
+
+**実行例:**
+```bash
+# 開発時：30秒で自動終了
+deno run --allow-net --allow-env bot.ts --timeout 30
+
+# 運用時：タイムアウトなし
+deno run --allow-net --allow-env bot.ts
+```
+
 ### 技術的考慮事項
 - スレッド履歴の取得範囲（最新N件 vs 全履歴）
 - 長文応答の分割投稿
@@ -51,6 +79,31 @@ Deno.Command APIを使用してClaude Code CLIを実行する。
 - 長時間処理時のDiscord応答方法（タイピング表示等）
 - コンテキスト長制限への対応
 
+## 実装計画
+
+### フェーズ1: 基盤設定（高優先度）
+1. **プロジェクト構造決定** - ファイル構成とモジュール分割
+2. **依存関係設定** - deno.json, deps.ts でHarmonyライブラリ設定  
+3. **環境設定** - .env.example作成、TOKEN管理方法確立
+4. **【ユーザ作業】Discord Bot設定** - Developer PortalでBot作成・Token取得 (`DISCORD_BOT_SETUP.md`参照)
+5. **基本Bot実装** - Discord接続、メンション検知の最小構成
+6. **【ユーザ作業】Bot招待** - サーバーに招待・権限設定
+
+### フェーズ2: 核心機能実装（中優先度）
+7. **スレッド履歴取得** - メッセージ履歴の収集と整理
+8. **Claude CLI実行** - コマンド引数タイムアウト制御付きプロセス実行
+9. **応答処理** - 2000文字制限対応の分割投稿機能
+10. **エラーハンドリング** - 堅牢な例外処理とログ出力
+
+### フェーズ3: 仕上げ（低優先度）  
+11. **動作テスト** - 各機能の統合テストとデバッグ
+12. **ドキュメント整備** - README.md更新、使用方法説明
+
+### ユーザ作業タイミング
+- **4番目**: 基本実装前にBot作成・Token取得を完了
+- **6番目**: 接続テスト前にサーバー招待・権限設定を完了
+
 ## 参考資料
 - [Harmony GitHub](https://github.com/harmonyland/harmony)
 - [Harmony Documentation](https://harmony.mod.land/)
+- [Discord Bot Setup Guide](./DISCORD_BOT_SETUP.md)
