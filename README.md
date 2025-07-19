@@ -131,12 +131,38 @@ const result = await cmd.output();
 - **タイムアウト**: 60秒で強制終了
 - **セキュリティ**: 入力検証・コマンドインジェクション対策
 
-## 次のステップ
+## 実装状況（2025-07-19）
 
-1. ✅ 技術調査完了
-2. 🔄 プロトタイプ実装開始
-3. ⏳ 基本機能の動作確認
-4. ⏳ エラーハンドリング・最適化
+### ✅ フェーズ1完了 - 基盤実装
+1. ✅ **プロジェクト構造決定** - モジュール化されたファイル構成
+2. ✅ **依存関係設定** - JSR @harmony/harmony v2.9.1 使用
+3. ✅ **環境設定** - .env ファイル、セットアップガイド作成
+4. ✅ **基本Bot実装** - TypeScript型チェック通過、動作確認済み
+
+### 🎯 動作確認済み機能
+- ✅ **Discord Bot接続** - Token認証・ログイン成功
+- ✅ **メンション検知** - @ボット名 での反応確認
+- ✅ **Claude CLI実行** - claude -p コマンド実行成功（約5秒）
+- ✅ **Discord応答** - メッセージ送信機能動作
+
+### 📊 テスト結果
+```
+[2025-07-19T00:36:08] INFO: Processing mention from ahirunotamura
+[2025-07-19T00:36:08] INFO: Using current message as context
+[2025-07-19T00:36:13] INFO: Claude Code execution completed successfully
+[2025-07-19T00:36:14] INFO: Response sent successfully
+```
+
+### 🔧 現在の実装状態
+- **実行コマンド**: `deno task dev` (30秒タイムアウト) / `deno task start` (永続実行)
+- **権限設定**: `--allow-net --allow-env --allow-run --allow-read --env-file=.env`
+- **メッセージ履歴**: 現在のメッセージのみ（シンプル実装）
+
+### 📋 次のステップ
+1. ⏳ **フェーズ2**: スレッド履歴取得機能の拡張
+2. ⏳ **エラーハンドリング強化**
+3. ⏳ **メッセージ分割投稿テスト**
+4. ⏳ **パフォーマンス最適化**
 
 ## ⚠️ 注意事項
 

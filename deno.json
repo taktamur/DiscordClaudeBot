@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts",
+    "dev": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts --timeout 30",
+    "fmt": "deno fmt",
+    "lint": "deno lint",
+    "check": "deno check main.ts"
+  },
+  "fmt": {
+    "files": {
+      "include": ["src/", "main.ts"],
+      "exclude": ["tmp/"]
+    }
+  },
+  "lint": {
+    "files": {
+      "include": ["src/", "main.ts"],
+      "exclude": ["tmp/"]
+    }
+  },
+  "imports": {
+    "@harmony/harmony": "jsr:@harmony/harmony"
+  }
+}
