@@ -22,7 +22,11 @@ jobs:
     - name: Verify formatting
       run: |
         echo "Checking formatting..."
-        deno fmt --check --verbose || (echo "Formatting errors found. Running 'deno fmt' to see changes:" && deno fmt --check --diff && exit 1)
+        if ! deno fmt --check; then
+          echo "❌ Formatting errors found. Please run 'deno fmt' locally and commit the changes."
+          exit 1
+        fi
+        echo "✅ Formatting check passed."
       
     - name: Run linter
       run: deno lint
