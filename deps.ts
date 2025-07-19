@@ -1,9 +1,14 @@
+/**
+ * 外部依存関係の管理ファイル
+ * Harmony ライブラリからの必要なクラスと型をエクスポートします
+ */
+
 export {
-  Client,
-  Message,
-  GatewayIntents,
-} from "jsr:@harmony/harmony";
+  Client,          // Discord クライアント
+  Message,         // Discord メッセージオブジェクト
+  GatewayIntents,  // Discord Gateway の権限設定
+} from "@harmony/harmony";
 
 export type {
-  ClientOptions,
-} from "jsr:@harmony/harmony";
+  ClientOptions,   // Discord クライアントのオプション型
+} from "@harmony/harmony";
