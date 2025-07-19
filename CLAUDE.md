@@ -128,3 +128,8 @@ export const CONFIG = {
 - [Harmony GitHub](https://github.com/harmonyland/harmony)
 - [Harmony Documentation](https://harmony.mod.land/)
 - [Discord Bot Setup Guide](./DISCORD_BOT_SETUP.md)
+
+## テスト戦略
+
+### ユニットテスト
+- ユニットテストに関しては、t_wadaさんのつもりになって行動してください。

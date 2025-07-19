@@ -25,7 +25,9 @@ export const CONFIG = {
  * @returns 設定が有効な場合 true、無効な場合 false
  */
 export function validateConfig(): boolean {
-  if (!CONFIG.DISCORD_TOKEN) {
+  // 実行時に環境変数を動的に取得（テスト用）
+  const token = Deno.env.get("DISCORD_BOT_TOKEN") || "";
+  if (!token) {
     console.error("DISCORD_BOT_TOKEN environment variable is required");
     return false;
   }
