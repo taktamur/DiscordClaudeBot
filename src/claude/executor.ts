@@ -1,5 +1,7 @@
 import { CONFIG } from "../config.ts";
 import { Logger } from "../utils/logger.ts";
+import { CommandRunner } from "./command-runner.ts";
+import { DenoCommandRunner } from "./deno-command-runner.ts";
 
 /**
  * Claude Code CLI を実行するクラス
@@ -7,13 +9,15 @@ import { Logger } from "../utils/logger.ts";
  */
 export class ClaudeExecutor {
   private logger: Logger;
+  private commandRunner: CommandRunner;
 
   /**
    * ClaudeExecutor のコンストラクタ
-   * ログ出力用の Logger インスタンスを初期化します
+   * @param commandRunner コマンド実行部（省略時はDenoCommandRunnerを使用）
    */
-  constructor() {
+  constructor(commandRunner?: CommandRunner) {
     this.logger = new Logger();
+    this.commandRunner = commandRunner || new DenoCommandRunner();
   }
 
   /**
@@ -31,15 +35,6 @@ export class ClaudeExecutor {
     );
 
     try {
-      // Claude Code CLI コマンドを設定
-      // --dangerously-skip-permissions: 権限確認をスキップ（自動実行のため）
-      // -p: プロンプトを直接指定
-      const cmd = new Deno.Command("claude", {
-        args: ["--dangerously-skip-permissions", "-p", prompt],
-        stdout: "piped",
-        stderr: "piped",
-      });
-
       // タイムアウト処理を設定（30分）
       // 長時間の複雑な処理にも対応できるよう余裕を持った設定
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -52,8 +47,18 @@ export class ClaudeExecutor {
         }, CONFIG.CLAUDE_TIMEOUT_SECONDS * 1000);
       });
 
-      // Claude Code の実行とタイムアウトを競合させる
-      const executionPromise = cmd.output();
+      // Claude Code CLI コマンドを実行
+      // --dangerously-skip-permissions: 権限確認をスキップ（自動実行のため）
+      // -p: プロンプトを直接指定
+      const executionPromise = this.commandRunner.execute("claude", [
+        "--dangerously-skip-permissions",
+        "-p",
+        prompt,
+      ], {
+        stdout: "piped",
+        stderr: "piped",
+      });
+
       const result = await Promise.race([executionPromise, timeoutPromise]);
 
       // 実行結果を文字列に変換

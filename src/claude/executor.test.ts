@@ -8,52 +8,32 @@ import {
   assertRejects,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { ClaudeExecutor } from "./executor.ts";
+import { CommandResult, CommandRunner } from "./command-runner.ts";
 
-// Deno.Commandをモックするためのヘルパー
-class MockCommand {
-  // deno-lint-ignore no-explicit-any
-  constructor(public command: string, public options: any) {}
+// CommandRunnerのモック実装
+class MockCommandRunner implements CommandRunner {
+  constructor(private shouldSucceed: boolean = true) {}
 
-  output(): Promise<{
-    success: boolean;
-    stdout: Uint8Array;
-    stderr: Uint8Array;
-  }> {
+  execute(): Promise<CommandResult> {
     // 即座に解決してタイマーリークを防ぐ
     return Promise.resolve({
-      success: true,
-      stdout: new TextEncoder().encode("テスト応答メッセージ"),
-      stderr: new TextEncoder().encode(""),
-    });
-  }
-}
-
-class MockFailedCommand {
-  // deno-lint-ignore no-explicit-any
-  constructor(public command: string, public options: any) {}
-
-  output(): Promise<{
-    success: boolean;
-    stdout: Uint8Array;
-    stderr: Uint8Array;
-  }> {
-    // 即座に解決してタイマーリークを防ぐ
-    return Promise.resolve({
-      success: false,
-      stdout: new TextEncoder().encode(""),
-      stderr: new TextEncoder().encode("Error: Command failed"),
+      success: this.shouldSucceed,
+      code: this.shouldSucceed ? 0 : 1,
+      stdout: new TextEncoder().encode(
+        this.shouldSucceed ? "テスト応答メッセージ" : "",
+      ),
+      stderr: new TextEncoder().encode(
+        this.shouldSucceed ? "" : "Error: Command failed",
+      ),
     });
   }
 }
 
 Deno.test("ClaudeExecutor.execute", async (t) => {
   await t.step("正常なプロンプトで成功応答を返す", async () => {
-    // Arrange: Deno.Commandをモック
-    const originalCommand = Deno.Command;
+    // Arrange: MockCommandRunnerを使用
+    const mockCommandRunner = new MockCommandRunner(true);
     const originalSetTimeout = globalThis.setTimeout;
-
-    // @ts-ignore テスト用のモック
-    Deno.Command = MockCommand;
 
     // setTimeoutもモックしてタイマーリークを防ぐ
     globalThis.setTimeout =
@@ -63,7 +43,7 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
         return 1;
       }) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockCommandRunner);
     const testPrompt = "テストプロンプトです";
 
     // console出力をキャプチャ
@@ -89,24 +69,21 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
       assertEquals(hasCompletedLog, true);
     } finally {
       // Cleanup: モックを元に戻す
-      Deno.Command = originalCommand;
       globalThis.setTimeout = originalSetTimeout;
       console.log = originalLog;
     }
   });
 
   await t.step("コマンド実行失敗時にエラーを投げる", async () => {
-    // Arrange: 失敗するコマンドをモック
-    const originalCommand = Deno.Command;
+    // Arrange: 失敗するMockCommandRunnerを使用
+    const mockCommandRunner = new MockCommandRunner(false);
     const originalSetTimeout = globalThis.setTimeout;
 
-    // @ts-ignore テスト用のモック
-    Deno.Command = MockFailedCommand;
     // deno-lint-ignore no-explicit-any
     globalThis.setTimeout = ((_cb: (...args: any[]) => void, _delay: number) =>
       1) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockCommandRunner);
     const testPrompt = "テストプロンプトです";
 
     // console出力をキャプチャ
@@ -130,24 +107,21 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
       assertEquals(hasErrorLog, true);
     } finally {
       // Cleanup: モックを元に戻す
-      Deno.Command = originalCommand;
       globalThis.setTimeout = originalSetTimeout;
       console.error = originalError;
     }
   });
 
   await t.step("空のプロンプトでも正常に動作する", async () => {
-    // Arrange: Deno.Commandをモック
-    const originalCommand = Deno.Command;
+    // Arrange: MockCommandRunnerを使用
+    const mockCommandRunner = new MockCommandRunner(true);
     const originalSetTimeout = globalThis.setTimeout;
 
-    // @ts-ignore テスト用のモック
-    Deno.Command = MockCommand;
     // deno-lint-ignore no-explicit-any
     globalThis.setTimeout = ((_cb: (...args: any[]) => void, _delay: number) =>
       1) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockCommandRunner);
 
     // console出力をキャプチャ
     const originalLog = console.log;
@@ -161,7 +135,6 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
       assertEquals(typeof result, "string");
     } finally {
       // Cleanup: モックを元に戻す
-      Deno.Command = originalCommand;
       globalThis.setTimeout = originalSetTimeout;
       console.log = originalLog;
     }
