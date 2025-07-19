@@ -20,7 +20,9 @@ jobs:
         deno-version: v1.x
         
     - name: Verify formatting
-      run: deno fmt --check
+      run: |
+        echo "Checking formatting..."
+        deno fmt --check --verbose || (echo "Formatting errors found. Running 'deno fmt' to see changes:" && deno fmt --check --diff && exit 1)
       
     - name: Run linter
       run: deno lint
