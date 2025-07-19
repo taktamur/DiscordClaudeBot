@@ -38,13 +38,24 @@ TEST_CHANNEL_ID=your_test_channel_id_here
 
 ## 実行方法
 
-### 基本実行
+### Denoタスクを使用（推奨）
 ```bash
-deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
+# 標準テスト（90秒タイムアウト）
+deno task test:bot
+
+# クイックテスト（60秒タイムアウト）
+deno task test:bot:quick
+
+# フルテスト（120秒タイムアウト）
+deno task test:bot:full
 ```
 
-### 環境変数を事前設定
+### 手動実行
 ```bash
+# 基本実行
+deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
+
+# 環境変数を事前設定
 export DISCORD_BOT_TOKEN="your_token"
 export TEST_CHANNEL_ID="your_channel_id"
 deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90

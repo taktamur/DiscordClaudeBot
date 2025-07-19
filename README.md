@@ -42,12 +42,16 @@ deno task start
 
 ### テスト実行
 ```bash
-# 自動テストモード（90秒タイムアウト）
-deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
+# 標準テスト（90秒タイムアウト）
+deno task test:bot
 
-# または環境変数を事前設定
-export DISCORD_BOT_TOKEN="your_token"
-export TEST_CHANNEL_ID="your_test_channel_id"
+# クイックテスト（60秒タイムアウト）
+deno task test:bot:quick
+
+# フルテスト（120秒タイムアウト）
+deno task test:bot:full
+
+# 手動実行
 deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
 ```
 

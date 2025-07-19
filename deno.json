@@ -4,6 +4,9 @@
     "dev": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts --timeout 30",
     "test": "deno test --allow-env src/",
     "test:watch": "deno test --allow-env --watch src/",
+    "test:bot": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts --test --timeout 90",
+    "test:bot:quick": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts --test --timeout 60",
+    "test:bot:full": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts --test --timeout 120",
     "fmt": "deno fmt",
     "lint": "deno lint",
     "check": "deno check main.ts"
