@@ -15,7 +15,10 @@ const logger = new Logger();
  * --timeout オプションによる自動終了機能と --test オプションをサポート
  * @returns 解析されたオプション
  */
-function parseCommandLineArgs(): { timeoutSeconds?: number; isTestMode: boolean } {
+function parseCommandLineArgs(): {
+  timeoutSeconds?: number;
+  isTestMode: boolean;
+} {
   const timeoutIndex = Deno.args.indexOf("--timeout");
   const timeoutSeconds = timeoutIndex !== -1
     ? parseInt(Deno.args[timeoutIndex + 1])
@@ -32,7 +35,7 @@ function parseCommandLineArgs(): { timeoutSeconds?: number; isTestMode: boolean 
  */
 async function main(): Promise<void> {
   const { timeoutSeconds, isTestMode } = parseCommandLineArgs();
-  
+
   if (isTestMode) {
     logger.info("Discord Claude Bot（テストモード）を起動中");
   } else {
@@ -83,25 +86,24 @@ async function main(): Promise<void> {
  */
 async function runTestMode(bot: DiscordBot): Promise<void> {
   logger.info("テストモードを開始します");
-  
+
   try {
     // ボットが完全に起動するまで少し待機
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     // TestRunnerを初期化して実行
     const testRunner = new TestRunner(bot.getClient());
     await testRunner.runTests();
-    
+
     // テスト結果に基づいて終了コード決定
     const allPassed = testRunner.isAllTestsPassed();
     logger.info(`テスト完了: ${allPassed ? "全テスト成功" : "一部テスト失敗"}`);
-    
+
     // ボットを停止
     await bot.stop();
-    
+
     // 終了コード設定（CI/CD対応）
     Deno.exit(allPassed ? 0 : 1);
-    
   } catch (error) {
     logger.error(`テストの実行に失敗しました: ${error}`);
     await bot.stop();

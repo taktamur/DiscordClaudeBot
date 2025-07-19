@@ -37,7 +37,10 @@ export class TestRunner {
   private logger: Logger;
   private testResults: TestResult[] = [];
   private currentTestId: string | null = null;
-  private responseWaiter: { resolve: (value: string) => void; reject: (reason: string) => void } | null = null;
+  private responseWaiter: {
+    resolve: (value: string) => void;
+    reject: (reason: string) => void;
+  } | null = null;
 
   /**
    * デフォルトのテストシナリオ
@@ -84,9 +87,11 @@ export class TestRunner {
    * テストスイートを実行
    * @param scenarios 実行するテストシナリオ（省略時はデフォルトシナリオ）
    */
-  async runTests(scenarios: TestScenario[] = this.DEFAULT_SCENARIOS): Promise<TestResult[]> {
+  async runTests(
+    scenarios: TestScenario[] = this.DEFAULT_SCENARIOS,
+  ): Promise<TestResult[]> {
     this.logger.info("テストスイートを開始します");
-    
+
     const channel = await this.getTestChannel();
     if (!channel) {
       throw new Error("テストチャンネルが見つかりません");
@@ -98,7 +103,7 @@ export class TestRunner {
       this.logger.info(`テスト実行中: ${scenario.name}`);
       const result = await this.runSingleTest(channel, scenario);
       this.testResults.push(result);
-      
+
       // テスト間のインターバル（レート制限回避）
       await this.delay(2000);
     }
@@ -125,22 +130,25 @@ export class TestRunner {
   /**
    * 単一のテストシナリオを実行
    */
-  private async runSingleTest(channel: TextChannel, scenario: TestScenario): Promise<TestResult> {
+  private async runSingleTest(
+    channel: TextChannel,
+    scenario: TestScenario,
+  ): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       // 自己メンション付きメッセージを送信
       const mentionMessage = `<@${this.client.user?.id}> ${scenario.message}`;
       this.currentTestId = `test_${Date.now()}`;
-      
+
       await channel.send(mentionMessage);
-      
+
       // 応答を待機
       const response = await this.waitForResponse(scenario.timeoutMs);
       const responseTime = Date.now() - startTime;
-      
+
       // 応答パターンの検証
-      const success = scenario.expectedPattern 
+      const success = scenario.expectedPattern
         ? scenario.expectedPattern.test(response)
         : response.length > 0;
 
@@ -150,7 +158,6 @@ export class TestRunner {
         responseTime,
         response: response.substring(0, 100), // 最初の100文字のみ記録
       };
-      
     } catch (error) {
       const responseTime = Date.now() - startTime;
       return {
@@ -168,7 +175,7 @@ export class TestRunner {
   private waitForResponse(timeoutMs: number): Promise<string> {
     return new Promise((resolve, reject) => {
       this.responseWaiter = { resolve, reject };
-      
+
       setTimeout(() => {
         if (this.responseWaiter) {
           this.responseWaiter.reject("タイムアウト");
@@ -182,7 +189,7 @@ export class TestRunner {
    * 指定時間待機
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -190,7 +197,7 @@ export class TestRunner {
    */
   private generateReport(): void {
     const totalTests = this.testResults.length;
-    const successfulTests = this.testResults.filter(r => r.success).length;
+    const successfulTests = this.testResults.filter((r) => r.success).length;
     const failedTests = totalTests - successfulTests;
 
     this.logger.info("=".repeat(50));
@@ -199,22 +206,26 @@ export class TestRunner {
     this.logger.info(`総テスト数: ${totalTests}`);
     this.logger.info(`成功: ${successfulTests}`);
     this.logger.info(`失敗: ${failedTests}`);
-    this.logger.info(`成功率: ${((successfulTests / totalTests) * 100).toFixed(1)}%`);
+    this.logger.info(
+      `成功率: ${((successfulTests / totalTests) * 100).toFixed(1)}%`,
+    );
     this.logger.info("-".repeat(50));
 
     for (const result of this.testResults) {
       const status = result.success ? "✅ 成功" : "❌ 失敗";
-      this.logger.info(`${status} ${result.scenario} (${result.responseTime}ms)`);
-      
+      this.logger.info(
+        `${status} ${result.scenario} (${result.responseTime}ms)`,
+      );
+
       if (result.error) {
         this.logger.info(`  エラー: ${result.error}`);
       }
-      
+
       if (result.response) {
         this.logger.info(`  応答: ${result.response}`);
       }
     }
-    
+
     this.logger.info("=".repeat(50));
   }
 
@@ -222,6 +233,6 @@ export class TestRunner {
    * テスト実行の成功判定
    */
   isAllTestsPassed(): boolean {
-    return this.testResults.every(result => result.success);
+    return this.testResults.every((result) => result.success);
   }
 }

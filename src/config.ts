@@ -40,7 +40,9 @@ export function validateConfig(isTestMode = false): boolean {
   if (isTestMode) {
     const testChannelId = Deno.env.get("TEST_CHANNEL_ID") || "";
     if (!testChannelId) {
-      console.error("TEST_CHANNEL_ID environment variable is required for test mode");
+      console.error(
+        "TEST_CHANNEL_ID environment variable is required for test mode",
+      );
       console.error("Please set TEST_CHANNEL_ID in your .env file");
       return false;
     }

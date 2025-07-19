@@ -58,14 +58,18 @@ export class DiscordBot {
 
     // メッセージ受信時の処理
     this.client.on("messageCreate", async (msg: Message) => {
-      this.logger.info(`メッセージ受信: ${msg.author.username}: ${msg.content.substring(0, 50)}...`);
-      
+      this.logger.info(
+        `メッセージ受信: ${msg.author.username}: ${
+          msg.content.substring(0, 50)
+        }...`,
+      );
+
       // 重複処理防止チェック
       if (this.processingMessages.has(msg.id)) {
         this.logger.info("既に処理中のメッセージのためスキップ");
         return;
       }
-      
+
       if (this.shouldProcessMessage(msg)) {
         this.logger.info("メンション検知 - 処理開始");
         await this.handleMention(msg);
@@ -84,29 +88,35 @@ export class DiscordBot {
     const isBot = msg.author.bot;
     const botId = this.client.user?.id || "";
     const isOwnMessage = msg.author.id === botId;
-    
+
     // 【重要】自分のメッセージは絶対に処理しない（無限ループ防止）
     if (isOwnMessage) {
       this.logger.info("自分のメッセージのため処理をスキップ");
       return false;
     }
-    
+
     // メンション検知: Harmonyの解析結果 + 文字列パターンマッチング
     const hasMentionObj = msg.mentions.users.has(botId);
     const hasMentionText = msg.content.includes(`<@${botId}>`);
     const hasMention = hasMentionObj || hasMentionText;
-    
+
     // デバッグ用: メンションオブジェクトの詳細
     const mentionedUsers = Array.from(msg.mentions.users.keys());
-    this.logger.info(`メンション詳細: users=[${mentionedUsers.join(",")}], mentionObj=${hasMentionObj}, mentionText=${hasMentionText}, content="${msg.content}"`);
-    this.logger.info(`メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`);
-    
+    this.logger.info(
+      `メンション詳細: users=[${
+        mentionedUsers.join(",")
+      }], mentionObj=${hasMentionObj}, mentionText=${hasMentionText}, content="${msg.content}"`,
+    );
+    this.logger.info(
+      `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`,
+    );
+
     // 他のボットメッセージは通常時は除外（テストモード時のみ例外）
     if (isBot && !this.isTestMode) {
       this.logger.info("他のボットメッセージのため処理をスキップ");
       return false;
     }
-    
+
     return hasMention;
   }
 
@@ -118,7 +128,7 @@ export class DiscordBot {
   private async handleMention(msg: Message): Promise<void> {
     // 処理中としてマーク
     this.processingMessages.add(msg.id);
-    
+
     try {
       this.logger.info(`${msg.author.username}からのメンションを処理中`);
 
@@ -161,11 +171,11 @@ export class DiscordBot {
   private async enforceRateLimit(): Promise<void> {
     const minInterval = 1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND;
     const elapsed = Date.now() - this.lastMessageTime;
-    
+
     if (elapsed < minInterval) {
       const waitTime = minInterval - elapsed;
       this.logger.info(`レート制限のため ${waitTime}ms 待機中`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
   }
 
