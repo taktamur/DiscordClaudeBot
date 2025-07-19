@@ -7,6 +7,7 @@ export {
   Client,          // Discord クライアント
   Message,         // Discord メッセージオブジェクト
   GatewayIntents,  // Discord Gateway の権限設定
+  TextChannel,     // Discord テキストチャンネル
 } from "@harmony/harmony";
 
 export type {

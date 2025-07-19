@@ -65,10 +65,13 @@ if (timeoutSeconds) {
 **実行例:**
 ```bash
 # 開発時：30秒で自動終了
-deno run --allow-net --allow-env bot.ts --timeout 30
+deno run --allow-net --allow-env --allow-read main.ts --timeout 30
 
 # 運用時：タイムアウトなし
-deno run --allow-net --allow-env bot.ts
+deno run --allow-net --allow-env --allow-read main.ts
+
+# テストモード：自動テスト実行
+deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout 90
 ```
 
 ### 技術的考慮事項
@@ -89,10 +92,18 @@ deno run --allow-net --allow-env bot.ts
 - Claude Code CLI実行タイムアウト: 1800秒（30分）
 - 長時間の複雑な処理にも対応可能
 
+### テスト自動化機能
+- `--test`オプションで自動テストモード実行
+- 自己メンション機能による機能テスト
+- 3つのテストシナリオ（基本応答・Claude連携・短文処理）
+- 詳細なテスト結果レポート出力
+- CI/CD対応（終了コード: 成功=0、失敗=1）
+
 ### 設定項目 (src/config.ts)
 ```typescript
 export const CONFIG = {
   DISCORD_TOKEN: Deno.env.get("DISCORD_BOT_TOKEN") || "",
+  TEST_CHANNEL_ID: Deno.env.get("TEST_CHANNEL_ID") || "",  // テスト用
   CLAUDE_TIMEOUT_SECONDS: 1800,  // 30分
   MAX_MESSAGE_LENGTH: 2000,
   MAX_HISTORY_MESSAGES: 50,

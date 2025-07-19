@@ -27,8 +27,11 @@ Discord のスレッド内で特定のメンション（@ボット名）を受�
 - ✅ **会話文脈理解** - 時系列順の会話履歴をClaude Codeに提供
 - ✅ **Claude CLI実行** - claude -p コマンド実行成功
 - ✅ **Discord応答** - メッセージ送信機能動作
+- ✅ **テスト自動化** - 自己メンション機能による自動テスト
 
 ## 実行方法
+
+### 通常実行
 ```bash
 # 開発時（30秒タイムアウト）
 deno task dev
@@ -37,11 +40,30 @@ deno task dev
 deno task start
 ```
 
+### テスト実行
+```bash
+# 自動テストモード（90秒タイムアウト）
+deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
+
+# または環境変数を事前設定
+export DISCORD_BOT_TOKEN="your_token"
+export TEST_CHANNEL_ID="your_test_channel_id"
+deno run --allow-net --allow-env --allow-read --allow-run main.ts --test --timeout=90
+```
+
+**テストモード要件:**
+- 環境変数 `TEST_CHANNEL_ID` にテスト用チャンネルIDを設定
+- ボットがテストチャンネルで送信・読み取り権限を持つこと
+- `--allow-run` フラグでClaude CLI実行権限が必要
+
 ## ドキュメント構成
 
 ### セットアップ
 - [Discord Bot セットアップ](docs/setup/discord-setup.md)
 - [環境セットアップ](docs/setup/setup.md)
+
+### テスト
+- [自動テスト機能](docs/testing/automated-testing.md)
 
 ### 開発資料
 - [実装ステータス](docs/development/status.md)
