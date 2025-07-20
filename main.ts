@@ -6,7 +6,7 @@
 import { DiscordBot } from "./src/bot.ts";
 import { validateConfig } from "./src/config.ts";
 import { Logger } from "./src/utils/logger.ts";
-import { TestRunner } from "./src/test/test-runner.ts";
+import { E2ETestRunner } from "./e2e/runner.ts";
 
 const logger = new Logger();
 
@@ -91,13 +91,15 @@ async function runTestMode(bot: DiscordBot): Promise<void> {
     // ボットが完全に起動するまで少し待機
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // TestRunnerを初期化して実行
-    const testRunner = new TestRunner(bot.getClient());
-    await testRunner.runTests();
+    // E2ETestRunnerを初期化して実行
+    const e2eTestRunner = new E2ETestRunner(bot.getClient());
+    await e2eTestRunner.runE2ETests();
 
     // テスト結果に基づいて終了コード決定
-    const allPassed = testRunner.isAllTestsPassed();
-    logger.info(`テスト完了: ${allPassed ? "全テスト成功" : "一部テスト失敗"}`);
+    const allPassed = e2eTestRunner.isAllE2ETestsPassed();
+    logger.info(
+      `E2Eテスト完了: ${allPassed ? "全テスト成功" : "一部テスト失敗"}`,
+    );
 
     // ボットを停止
     await bot.stop();

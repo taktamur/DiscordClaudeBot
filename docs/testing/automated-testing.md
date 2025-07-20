@@ -147,15 +147,15 @@ jobs:
 ## 実装詳細
 
 ### 主要クラス
-- **TestRunner** (`src/test/test-runner.ts`): テスト実行とレポート生成
+- **E2ETestRunner** (`e2e/runner.ts`): E2Eテスト実行とレポート生成
 - **DiscordBot** (`src/bot.ts`): テストモードフラグによる動作切り替え
 
 ### テストフロー
 1. `main.ts`で`--test`オプション検知
 2. `DiscordBot.setTestMode(true)`でテストモード有効化
-3. `TestRunner`でテストシナリオ実行
+3. `E2ETestRunner`でE2Eテストシナリオ実行
 4. 各シナリオでメッセージ送信→応答待機→検証
 5. 結果レポート生成後、プロセス終了
 
 ### カスタマイズ
-テストシナリオは`TestRunner`クラスの`DEFAULT_SCENARIOS`で定義されており、必要に応じて追加・変更可能です。
+E2Eテストシナリオは`E2ETestRunner`クラスの`DEFAULT_SCENARIOS`で定義されており、必要に応じて追加・変更可能です。

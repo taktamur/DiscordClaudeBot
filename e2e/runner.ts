@@ -1,16 +1,16 @@
 /**
- * Discord Claude Bot のテスト実行クラス
- * 自己メンション機能を使ったボット機能の自動テストを実行します
+ * Discord Claude Bot のE2Eテスト実行クラス
+ * 自己メンション機能を使ったボット機能のEnd-to-Endテストを実行します
  */
 
-import { Client, Message, TextChannel } from "../../deps.ts";
-import { CONFIG } from "../config.ts";
-import { Logger } from "../utils/logger.ts";
+import { Client, Message, TextChannel } from "../deps.ts";
+import { CONFIG } from "../src/config.ts";
+import { Logger } from "../src/utils/logger.ts";
 
 /**
- * テストシナリオの定義
+ * E2Eテストシナリオの定義
  */
-interface TestScenario {
+interface E2ETestScenario {
   name: string;
   message: string;
   expectedPattern?: RegExp;
@@ -18,9 +18,9 @@ interface TestScenario {
 }
 
 /**
- * テスト結果の定義
+ * E2Eテスト結果の定義
  */
-interface TestResult {
+interface E2ETestResult {
   scenario: string;
   success: boolean;
   responseTime: number;
@@ -29,13 +29,13 @@ interface TestResult {
 }
 
 /**
- * Discord Bot のテスト実行クラス
- * 指定されたチャンネルで自動テストシナリオを実行します
+ * Discord Bot のE2Eテスト実行クラス
+ * 指定されたチャンネルで自動E2Eテストシナリオを実行します
  */
-export class TestRunner {
+export class E2ETestRunner {
   private client: Client;
   private logger: Logger;
-  private testResults: TestResult[] = [];
+  private testResults: E2ETestResult[] = [];
   private currentTestId: string | null = null;
   private responseWaiter: {
     resolve: (value: string) => void;
@@ -43,22 +43,22 @@ export class TestRunner {
   } | null = null;
 
   /**
-   * デフォルトのテストシナリオ
+   * デフォルトのE2Eテストシナリオ
    */
-  private readonly DEFAULT_SCENARIOS: TestScenario[] = [
+  private readonly DEFAULT_SCENARIOS: E2ETestScenario[] = [
     {
-      name: "基本応答テスト",
+      name: "基本応答E2Eテスト",
       message: "こんにちは",
       timeoutMs: 30000, // 30秒
     },
     {
-      name: "Claude連携テスト",
+      name: "Claude連携E2Eテスト",
       message: "2+2は？",
       expectedPattern: /4/,
       timeoutMs: 60000, // 60秒（Claude実行時間考慮）
     },
     {
-      name: "短文処理テスト",
+      name: "短文処理E2Eテスト",
       message: "はい",
       timeoutMs: 30000,
     },
@@ -84,13 +84,13 @@ export class TestRunner {
   }
 
   /**
-   * テストスイートを実行
-   * @param scenarios 実行するテストシナリオ（省略時はデフォルトシナリオ）
+   * E2Eテストスイートを実行
+   * @param scenarios 実行するE2Eテストシナリオ（省略時はデフォルトシナリオ）
    */
-  async runTests(
-    scenarios: TestScenario[] = this.DEFAULT_SCENARIOS,
-  ): Promise<TestResult[]> {
-    this.logger.info("テストスイートを開始します");
+  async runE2ETests(
+    scenarios: E2ETestScenario[] = this.DEFAULT_SCENARIOS,
+  ): Promise<E2ETestResult[]> {
+    this.logger.info("E2Eテストスイートを開始します");
 
     const channel = await this.getTestChannel();
     if (!channel) {
@@ -100,8 +100,8 @@ export class TestRunner {
     this.testResults = [];
 
     for (const scenario of scenarios) {
-      this.logger.info(`テスト実行中: ${scenario.name}`);
-      const result = await this.runSingleTest(channel, scenario);
+      this.logger.info(`E2Eテスト実行中: ${scenario.name}`);
+      const result = await this.runSingleE2ETest(channel, scenario);
       this.testResults.push(result);
 
       // テスト間のインターバル（レート制限回避）
@@ -113,7 +113,7 @@ export class TestRunner {
   }
 
   /**
-   * テストチャンネルを取得
+   * E2Eテストチャンネルを取得
    */
   private async getTestChannel(): Promise<TextChannel | null> {
     try {
@@ -122,18 +122,18 @@ export class TestRunner {
         return channel as TextChannel;
       }
     } catch (error) {
-      this.logger.error(`テストチャンネルの取得に失敗: ${error}`);
+      this.logger.error(`E2Eテストチャンネルの取得に失敗: ${error}`);
     }
     return null;
   }
 
   /**
-   * 単一のテストシナリオを実行
+   * 単一のE2Eテストシナリオを実行
    */
-  private async runSingleTest(
+  private async runSingleE2ETest(
     channel: TextChannel,
-    scenario: TestScenario,
-  ): Promise<TestResult> {
+    scenario: E2ETestScenario,
+  ): Promise<E2ETestResult> {
     const startTime = Date.now();
 
     try {
@@ -193,7 +193,7 @@ export class TestRunner {
   }
 
   /**
-   * テスト結果レポートを生成・出力
+   * E2Eテスト結果レポートを生成・出力
    */
   private generateReport(): void {
     const totalTests = this.testResults.length;
@@ -201,7 +201,7 @@ export class TestRunner {
     const failedTests = totalTests - successfulTests;
 
     this.logger.info("=".repeat(50));
-    this.logger.info("テスト結果レポート");
+    this.logger.info("E2Eテスト結果レポート");
     this.logger.info("=".repeat(50));
     this.logger.info(`総テスト数: ${totalTests}`);
     this.logger.info(`成功: ${successfulTests}`);
@@ -230,9 +230,9 @@ export class TestRunner {
   }
 
   /**
-   * テスト実行の成功判定
+   * E2Eテスト実行の成功判定
    */
-  isAllTestsPassed(): boolean {
+  isAllE2ETestsPassed(): boolean {
     return this.testResults.every((result) => result.success);
   }
 }

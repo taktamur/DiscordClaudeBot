@@ -7,7 +7,7 @@ Discord Claude Bot では、テスト環境と本番環境を分離するため�
 以下の環境がサポートされています：
 
 - **production** (デフォルト): 本番環境用、`.env` ファイルを使用
-- **test**: テスト環境用、`.env.test` ファイルを使用
+- **test**: E2Eテスト環境用、`.env.e2e` ファイルを使用
 - **development**: 開発環境用、`.env` ファイルを使用
 
 ## 設定ファイル
@@ -18,8 +18,8 @@ Discord Claude Bot では、テスト環境と本番環境を分離するため�
 # 本番環境用（デフォルト）
 cp .env.example .env
 
-# テスト環境用
-cp .env.example .env.test
+# E2Eテスト環境用
+cp .env.example .env.e2e
 ```
 
 ### 2. 各環境ファイルの設定
@@ -31,9 +31,9 @@ DISCORD_BOT_TOKEN=your_production_bot_token_here
 NODE_ENV=production
 ```
 
-#### .env.test
+#### .env.e2e
 ```env
-# テスト用Bot Token
+# E2Eテスト用Bot Token
 DISCORD_BOT_TOKEN=your_test_bot_token_here
 TEST_CHANNEL_ID=your_test_channel_id_here
 NODE_ENV=test
@@ -70,7 +70,7 @@ await switchEnvironment("production");
 1. **テスト用Bot作成**
    - Discord Developer Portal で新しいアプリケーションを作成
    - Bot タブでトークンを生成
-   - `.env.test` に設定
+   - `.env.e2e` に設定
 
 2. **本番用Bot設定**
    - 既存の本番用Botトークンを使用
@@ -104,7 +104,7 @@ NODE_ENV=production deno run --allow-net --allow-env --allow-read main.ts
 ## 注意事項
 
 - テスト用と本番用で異なるDiscord Botトークンを使用してください
-- `.env` と `.env.test` ファイルは `.gitignore` に追加されています
+- `.env` と `.env.e2e` ファイルは `.gitignore` に追加されています
 - 本番環境では `TEST_CHANNEL_ID` は通常不要ですが、緊急時のテスト用に設定可能です
 - 環境ファイルが見つからない場合は、システムの環境変数が使用されます
 

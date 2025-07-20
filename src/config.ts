@@ -15,7 +15,7 @@ async function loadEnvironmentConfig(environment?: string): Promise<void> {
   // 環境に応じて適切な.envファイルを選択
   switch (env) {
     case "test":
-      envFile = ".env.test";
+      envFile = ".env.e2e";
       break;
     case "production":
     case "development":
