@@ -6,23 +6,30 @@ Discord Claude Bot では、テスト環境と本番環境を分離するため�
 
 以下の環境がサポートされています：
 
-- **development** (デフォルト): 開発環境用、`.env` ファイルを使用
-- **test**: テスト環境用、`.env.test` ファイルを使用  
-- **production**: 本番環境用、`.env.production` ファイルを使用
+- **production** (デフォルト): 本番環境用、`.env` ファイルを使用
+- **test**: テスト環境用、`.env.test` ファイルを使用
+- **development**: 開発環境用、`.env` ファイルを使用
 
 ## 設定ファイル
 
 ### 1. 環境別設定ファイルの作成
 
 ```bash
+# 本番環境用（デフォルト）
+cp .env.example .env
+
 # テスト環境用
 cp .env.example .env.test
-
-# 本番環境用  
-cp .env.example .env.production
 ```
 
 ### 2. 各環境ファイルの設定
+
+#### .env (本番環境用)
+```env
+# 本番用Bot Token
+DISCORD_BOT_TOKEN=your_production_bot_token_here
+NODE_ENV=production
+```
 
 #### .env.test
 ```env
@@ -30,13 +37,6 @@ cp .env.example .env.production
 DISCORD_BOT_TOKEN=your_test_bot_token_here
 TEST_CHANNEL_ID=your_test_channel_id_here
 NODE_ENV=test
-```
-
-#### .env.production
-```env
-# 本番用Bot Token
-DISCORD_BOT_TOKEN=your_production_bot_token_here
-NODE_ENV=production
 ```
 
 ## 環境の切り替え方法
@@ -74,7 +74,7 @@ await switchEnvironment("production");
 
 2. **本番用Bot設定**
    - 既存の本番用Botトークンを使用
-   - `.env.production` に設定
+   - `.env` に設定
 
 ### 権限とサーバー招待
 
@@ -104,7 +104,7 @@ NODE_ENV=production deno run --allow-net --allow-env --allow-read main.ts
 ## 注意事項
 
 - テスト用と本番用で異なるDiscord Botトークンを使用してください
-- `.env.test` と `.env.production` ファイルは `.gitignore` に追加されています
+- `.env` と `.env.test` ファイルは `.gitignore` に追加されています
 - 本番環境では `TEST_CHANNEL_ID` は通常不要ですが、緊急時のテスト用に設定可能です
 - 環境ファイルが見つからない場合は、システムの環境変数が使用されます
 

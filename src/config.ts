@@ -18,8 +18,6 @@ async function loadEnvironmentConfig(environment?: string): Promise<void> {
       envFile = ".env.test";
       break;
     case "production":
-      envFile = ".env.production";
-      break;
     case "development":
     default:
       envFile = ".env";
