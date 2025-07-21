@@ -179,6 +179,9 @@ export class DiscordBot {
             errorMessage =
               "リクエストが多すぎます。しばらく待ってから再度お試しください。";
           }
+
+          // 詳細なエラー情報を追加
+          errorMessage += `\n\n詳細: ${error.message}`;
         }
 
         await msg.reply(errorMessage);
