@@ -59,6 +59,11 @@ export class E2ETestRunner {
       timeoutMs: 60000, // 60秒（Claude実行時間考慮）
     },
     {
+      name: "ジョーク生成",
+      message: "短いジョークを教えて",
+      timeoutMs: 60000, // 60秒に延長
+    },
+    {
       name: "短文処理E2Eテスト",
       message: "さようなら",
       timeoutMs: 60000, // 60秒に延長
