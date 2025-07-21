@@ -19,7 +19,7 @@ Deno.test("validateConfig", async (t) => {
       console.error = () => {}; // no-op
 
       try {
-        // Act: 検証実行
+        // Act: 検証実行（CONFIGオブジェクトは静的なので、環境変数を直接チェック）
         const result = validateConfig();
 
         // Assert: 結果確認
