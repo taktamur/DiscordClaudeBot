@@ -60,6 +60,9 @@ export const CONFIG = {
   /** Discord Bot のトークン（環境変数 DISCORD_BOT_TOKEN から取得） */
   DISCORD_TOKEN: Deno.env.get("DISCORD_BOT_TOKEN") || "",
 
+  /** E2Eテスト用呼び出しBotのトークン（環境変数 CALLER_BOT_TOKEN から取得） */
+  CALLER_BOT_TOKEN: Deno.env.get("CALLER_BOT_TOKEN") || "",
+
   /** テスト用チャンネルID（環境変数 TEST_CHANNEL_ID から取得） */
   TEST_CHANNEL_ID: Deno.env.get("TEST_CHANNEL_ID") || "",
 
@@ -93,6 +96,7 @@ export async function switchEnvironment(environment: string): Promise<void> {
   // CONFIGオブジェクトの値を再取得
   Object.assign(CONFIG, {
     DISCORD_TOKEN: Deno.env.get("DISCORD_BOT_TOKEN") || "",
+    CALLER_BOT_TOKEN: Deno.env.get("CALLER_BOT_TOKEN") || "",
     TEST_CHANNEL_ID: Deno.env.get("TEST_CHANNEL_ID") || "",
     CLAUDE_TIMEOUT_SECONDS: parseInt(
       Deno.env.get("CLAUDE_TIMEOUT_SECONDS") || "1800",
@@ -121,7 +125,7 @@ export function validateConfig(isTestMode = false): boolean {
     return false;
   }
 
-  // テストモード時はTEST_CHANNEL_IDも必須
+  // テストモード時はTEST_CHANNEL_IDとCALLER_BOT_TOKENも必須
   if (isTestMode) {
     const testChannelId = Deno.env.get("TEST_CHANNEL_ID") || "";
     if (!testChannelId) {
@@ -129,6 +133,18 @@ export function validateConfig(isTestMode = false): boolean {
         "TEST_CHANNEL_ID environment variable is required for test mode",
       );
       console.error("Please set TEST_CHANNEL_ID in your .env file");
+      return false;
+    }
+
+    const callerBotToken = Deno.env.get("CALLER_BOT_TOKEN") || "";
+    if (!callerBotToken) {
+      console.error(
+        "CALLER_BOT_TOKEN environment variable is required for test mode",
+      );
+      console.error("Please set CALLER_BOT_TOKEN in your .env.e2e file");
+      console.error(
+        "Refer to docs/E2E_CALLER_BOT_SETUP.md for setup instructions",
+      );
       return false;
     }
   }

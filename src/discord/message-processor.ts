@@ -19,12 +19,21 @@ export interface ThreadContext {
  */
 export class MessageProcessor {
   private logger: Logger;
+  private isTestMode: boolean = false;
 
   /**
    * MessageProcessor のコンストラクタ
    */
   constructor() {
     this.logger = new Logger();
+  }
+
+  /**
+   * テストモードを設定
+   * @param isTestMode テストモードの有効/無効
+   */
+  setTestMode(isTestMode: boolean): void {
+    this.isTestMode = isTestMode;
   }
 
   /**
@@ -208,10 +217,14 @@ ${messageHistory}
     this.logger.info("Discordに応答を送信中");
 
     try {
-      const mentionResponse = `<@${msg.author.id}> ${response}`;
+      // テストモード時はBot間の無限ループを防ぐためメンションなしで応答
+      // 通常時は発言者にメンションを付けて応答
+      const finalResponse = this.isTestMode
+        ? response
+        : `<@${msg.author.id}> ${response}`;
 
-      if (mentionResponse.length <= CONFIG.MAX_MESSAGE_LENGTH) {
-        await msg.reply(mentionResponse);
+      if (finalResponse.length <= CONFIG.MAX_MESSAGE_LENGTH) {
+        await msg.reply(finalResponse);
       } else {
         await this.sendSplitMessage(msg, response);
       }
@@ -237,7 +250,10 @@ ${messageHistory}
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const prefix = i === 0 ? `<@${msg.author.id}> ` : "(続き) ";
+      // テストモード時はメンションなし、通常時はメンション付き
+      const prefix = i === 0
+        ? (this.isTestMode ? "" : `<@${msg.author.id}> `)
+        : "(続き) ";
 
       if (i === 0) {
         await msg.reply(prefix + chunk);

@@ -70,7 +70,30 @@ export class ClaudeExecutor {
         this.logger.error(
           `Claude CLIが失敗しました (exit code: ${result.code}): ${stderr}`,
         );
-        throw new Error(`Claude execution failed: ${stderr}`);
+
+        // より詳細なエラーメッセージを提供
+        let errorMessage = "Claude CLI execution failed";
+        if (
+          stderr.includes("command not found") ||
+          stderr.includes("No such file")
+        ) {
+          errorMessage =
+            "Claude CLI command not found. Please install Claude CLI or check PATH.";
+        } else if (stderr.includes("permission denied")) {
+          errorMessage =
+            "Permission denied. Please check Claude CLI permissions.";
+        } else if (
+          stderr.includes("network") || stderr.includes("connection")
+        ) {
+          errorMessage = "Network error. Please check internet connection.";
+        } else if (stderr.includes("quota") || stderr.includes("limit")) {
+          errorMessage =
+            "Rate limit or quota exceeded. Please try again later.";
+        } else if (stderr.trim()) {
+          errorMessage = `Claude CLI error: ${stderr.trim()}`;
+        }
+
+        throw new Error(errorMessage);
       }
 
       this.logger.info("Claude Codeの実行が正常に完了しました");

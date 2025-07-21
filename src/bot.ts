@@ -111,10 +111,22 @@ export class DiscordBot {
       `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`,
     );
 
-    // 他のボットメッセージは通常時は除外（テストモード時のみ例外）
-    if (isBot && !this.isTestMode) {
-      this.logger.info("他のボットメッセージのため処理をスキップ");
-      return false;
+    // 他のボットメッセージは除外（無限ループ防止）
+    // ただし、E2Eテストモードの場合のみ特定のCaller Botは許可
+    if (isBot) {
+      if (this.isTestMode) {
+        // E2Eテスト時はCaller Botからのメッセージのみ許可
+        const callerBotId = "1396643708224540752"; // ClaudeBot-e2e-caller
+        if (msg.author.id !== callerBotId) {
+          this.logger.info(
+            "テストモード中の他ボットメッセージのため処理をスキップ",
+          );
+          return false;
+        }
+      } else {
+        this.logger.info("他のボットメッセージのため処理をスキップ");
+        return false;
+      }
     }
 
     return hasMention;
@@ -151,9 +163,25 @@ export class DiscordBot {
       this.logger.error(`メンション処理エラー: ${error}`);
       try {
         await this.enforceRateLimit();
-        await msg.reply(
-          "エラーが発生しました。しばらく時間をおいて再度お試しください。",
-        );
+
+        // エラーの種類に応じてより詳細なメッセージを提供
+        let errorMessage =
+          "エラーが発生しました。しばらく時間をおいて再度お試しください。";
+
+        if (error instanceof Error) {
+          if (error.message.includes("timed out")) {
+            errorMessage =
+              "処理がタイムアウトしました。もう少し簡単な質問でお試しください。";
+          } else if (error.message.includes("Claude execution failed")) {
+            errorMessage =
+              "Claude Code の実行でエラーが発生しました。システム管理者にお問い合わせください。";
+          } else if (error.message.includes("rate limit")) {
+            errorMessage =
+              "リクエストが多すぎます。しばらく待ってから再度お試しください。";
+          }
+        }
+
+        await msg.reply(errorMessage);
         this.lastMessageTime = Date.now();
       } catch (replyError) {
         this.logger.error(`エラー応答の送信に失敗: ${replyError}`);
@@ -212,6 +240,7 @@ export class DiscordBot {
    */
   setTestMode(isTestMode: boolean): void {
     this.isTestMode = isTestMode;
+    this.messageProcessor.setTestMode(isTestMode);
     this.logger.info(`テストモード設定: ${isTestMode}`);
   }
 }

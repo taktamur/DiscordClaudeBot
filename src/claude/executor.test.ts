@@ -120,7 +120,7 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
       await assertRejects(
         () => executor.execute(testPrompt),
         Error,
-        "Claude execution failed: Error: Command failed",
+        "Claude CLI error: Error: Command failed",
       );
 
       // エラーログが出力されている

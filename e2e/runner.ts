@@ -1,9 +1,9 @@
 /**
  * Discord Claude Bot のE2Eテスト実行クラス
- * 自己メンション機能を使ったボット機能のEnd-to-Endテストを実行します
+ * 専用の呼び出しBotを使ってメインBotの機能をEnd-to-Endテストで実行します
  */
 
-import { Client, Message, TextChannel } from "../deps.ts";
+import { Client, GatewayIntents, Message, TextChannel } from "../deps.ts";
 import { CONFIG } from "../src/config.ts";
 import { Logger } from "../src/utils/logger.ts";
 
@@ -30,10 +30,11 @@ interface E2ETestResult {
 
 /**
  * Discord Bot のE2Eテスト実行クラス
- * 指定されたチャンネルで自動E2Eテストシナリオを実行します
+ * 呼び出しBotを使ってメインBotの機能をテストします
  */
 export class E2ETestRunner {
-  private client: Client;
+  private mainClient: Client; // メインBot（応答を受信）
+  private callerClient: Client | null = null; // 呼び出しBot（メンション送信）
   private logger: Logger;
   private testResults: E2ETestResult[] = [];
   private currentTestId: string | null = null;
@@ -59,28 +60,62 @@ export class E2ETestRunner {
     },
     {
       name: "短文処理E2Eテスト",
-      message: "はい",
-      timeoutMs: 30000,
+      message: "さようなら",
+      timeoutMs: 60000, // 60秒に延長
     },
   ];
 
-  constructor(client: Client) {
-    this.client = client;
+  constructor(mainClient: Client) {
+    this.mainClient = mainClient;
     this.logger = new Logger();
     this.setupMessageListener();
   }
 
   /**
-   * ボットからの応答を監視するリスナーを設定
+   * メインBotからの応答を監視するリスナーを設定
    */
   private setupMessageListener(): void {
-    this.client.on("messageCreate", (msg: Message) => {
-      // ボット自身のメッセージかつ、テスト実行中の場合
-      if (msg.author.id === this.client.user?.id && this.responseWaiter) {
+    this.mainClient.on("messageCreate", (msg: Message) => {
+      // メインBotのメッセージかつ、テスト実行中の場合
+      if (msg.author.id === this.mainClient.user?.id && this.responseWaiter) {
         this.responseWaiter.resolve(msg.content);
         this.responseWaiter = null;
       }
     });
+  }
+
+  /**
+   * 呼び出しBotを初期化
+   */
+  private async initializeCallerBot(): Promise<void> {
+    const callerToken = Deno.env.get("CALLER_BOT_TOKEN");
+    if (!callerToken) {
+      throw new Error(
+        "CALLER_BOT_TOKEN environment variable is required for E2E testing",
+      );
+    }
+
+    this.callerClient = new Client({
+      intents: [
+        GatewayIntents.GUILDS,
+        GatewayIntents.GUILD_MESSAGES,
+        GatewayIntents.MESSAGE_CONTENT,
+      ],
+    });
+
+    await this.callerClient.connect(callerToken);
+    this.logger.info("呼び出しBotが正常に接続されました");
+  }
+
+  /**
+   * 呼び出しBotを終了
+   */
+  private async cleanupCallerBot(): Promise<void> {
+    if (this.callerClient) {
+      await this.callerClient.destroy();
+      this.callerClient = null;
+      this.logger.info("呼び出しBotを終了しました");
+    }
   }
 
   /**
@@ -92,32 +127,49 @@ export class E2ETestRunner {
   ): Promise<E2ETestResult[]> {
     this.logger.info("E2Eテストスイートを開始します");
 
-    const channel = await this.getTestChannel();
-    if (!channel) {
-      throw new Error("テストチャンネルが見つかりません");
-    }
+    try {
+      // 呼び出しBotを初期化
+      await this.initializeCallerBot();
 
-    this.testResults = [];
-
-    for (const scenario of scenarios) {
-      this.logger.info(`E2Eテスト実行中: ${scenario.name}`);
-      const result = await this.runSingleE2ETest(channel, scenario);
-      this.testResults.push(result);
-
-      // テスト間のインターバル（レート制限回避）
+      // 少し待機してBotが完全に起動するのを待つ
       await this.delay(2000);
-    }
 
-    this.generateReport();
-    return this.testResults;
+      const channel = await this.getTestChannel();
+      if (!channel) {
+        throw new Error("テストチャンネルが見つかりません");
+      }
+
+      this.testResults = [];
+
+      for (const scenario of scenarios) {
+        this.logger.info(`E2Eテスト実行中: ${scenario.name}`);
+        const result = await this.runSingleE2ETest(channel, scenario);
+        this.testResults.push(result);
+
+        // テスト間のインターバル（レート制限回避）
+        await this.delay(2000);
+      }
+
+      this.generateReport();
+      return this.testResults;
+    } finally {
+      // 呼び出しBotを終了
+      await this.cleanupCallerBot();
+    }
   }
 
   /**
-   * E2Eテストチャンネルを取得
+   * E2Eテストチャンネルを取得（呼び出しBot経由）
    */
   private async getTestChannel(): Promise<TextChannel | null> {
+    if (!this.callerClient) {
+      throw new Error("呼び出しBotが初期化されていません");
+    }
+
     try {
-      const channel = await this.client.channels.fetch(CONFIG.TEST_CHANNEL_ID);
+      const channel = await this.callerClient.channels.fetch(
+        CONFIG.TEST_CHANNEL_ID,
+      );
       if (channel && channel.type === 0) { // GUILD_TEXT
         return channel as TextChannel;
       }
@@ -134,16 +186,21 @@ export class E2ETestRunner {
     channel: TextChannel,
     scenario: E2ETestScenario,
   ): Promise<E2ETestResult> {
+    if (!this.callerClient) {
+      throw new Error("呼び出しBotが初期化されていません");
+    }
+
     const startTime = Date.now();
 
     try {
-      // 自己メンション付きメッセージを送信
-      const mentionMessage = `<@${this.client.user?.id}> ${scenario.message}`;
+      // メインBotにメンション付きメッセージを送信（呼び出しBot経由）
+      const mentionMessage =
+        `<@${this.mainClient.user?.id}> ${scenario.message}`;
       this.currentTestId = `test_${Date.now()}`;
 
       await channel.send(mentionMessage);
 
-      // 応答を待機
+      // メインBotからの応答を待機
       const response = await this.waitForResponse(scenario.timeoutMs);
       const responseTime = Date.now() - startTime;
 
