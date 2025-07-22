@@ -47,7 +47,6 @@ export class DiscordBot {
     // メッセージ処理ルールを初期化（botIdは後でupdateBotIdで設定）
     this.messageRules = new MessageProcessingRules(
       "",
-      this.isTestMode,
       this.logger,
     );
 
@@ -204,7 +203,6 @@ export class DiscordBot {
    */
   setTestMode(isTestMode: boolean): void {
     this.isTestMode = isTestMode;
-    this.messageRules.setTestMode(isTestMode);
     this.messageProcessor.setTestMode(isTestMode);
     this.logger.info(`テストモード設定: ${isTestMode}`);
   }

@@ -99,23 +99,19 @@ export class MessageProcessor {
     // ("GET requests may not have a body"エラー)、API変更も頻繁に発生するため
     // 複数パターンでの対応が必要
 
-    // パターン1: fetchMessages with options object
-    if (typeof channel.fetchMessages === "function") {
-      try {
-        this.logger.debug("Trying fetchMessages with options object");
-        const result = await channel.fetchMessages({
-          limit: Math.min(limit, 100),
-          before: currentMsg.id,
-        });
+    // fetchMessages with options object
+    try {
+      this.logger.debug("Trying fetchMessages with options object");
+      const result = await channel.fetchMessages({
+        limit: Math.min(limit, 100),
+        before: currentMsg.id,
+      });
 
-        if (result && typeof result.array === "function") {
-          const messages = result.array().reverse(); // 時系列順に並び替え
-          messages.push(currentMsg); // 現在のメッセージを最後に追加
-          return messages;
-        }
-      } catch (error) {
-        this.logger.debug(`fetchMessages with options failed: ${error}`);
-      }
+      const messages = result.array().reverse(); // 時系列順に並び替え
+      messages.push(currentMsg); // 現在のメッセージを最後に追加
+      return messages;
+    } catch (error) {
+      this.logger.debug(`fetchMessages with options failed: ${error}`);
     }
 
     // パターン2: fetchMessages with number parameter
