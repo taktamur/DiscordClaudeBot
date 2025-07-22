@@ -83,8 +83,17 @@ export class E2ETestRunner {
     this.mainClient.on("messageCreate", (msg: Message) => {
       // メインBotのメッセージかつ、テスト実行中の場合
       if (msg.author.id === this.mainClient.user?.id && this.responseWaiter) {
+        this.logger.debug(
+          `E2Eテストで応答受信: ${msg.content.substring(0, 50)}...`,
+        );
         this.responseWaiter.resolve(msg.content);
         this.responseWaiter = null;
+      } else if (msg.author.id === this.mainClient.user?.id) {
+        this.logger.debug(
+          `メインBotメッセージ受信（待機中なし）: ${
+            msg.content.substring(0, 50)
+          }...`,
+        );
       }
     });
   }
@@ -237,13 +246,23 @@ export class E2ETestRunner {
   private waitForResponse(timeoutMs: number): Promise<string> {
     return new Promise((resolve, reject) => {
       this.responseWaiter = { resolve, reject };
+      this.logger.debug(`応答待機開始: タイムアウト ${timeoutMs}ms`);
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         if (this.responseWaiter) {
+          this.logger.debug(`応答タイムアウト: ${timeoutMs}ms経過`);
           this.responseWaiter.reject("タイムアウト");
           this.responseWaiter = null;
         }
       }, timeoutMs);
+
+      // 元のresolveをラップして、タイムアウトをクリア
+      const originalResolve = this.responseWaiter.resolve;
+      this.responseWaiter.resolve = (value: string) => {
+        clearTimeout(timeoutId);
+        this.logger.debug(`応答受信完了: ${value.substring(0, 50)}...`);
+        originalResolve(value);
+      };
     });
   }
 
