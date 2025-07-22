@@ -207,6 +207,7 @@ export class MessageProcessor {
    * @param message 分割対象のメッセージ
    * @returns 分割されたメッセージ配列
    */
+  // FIXME: 別ファイルに分離する
   private splitMessage(message: string): string[] {
     const chunks: string[] = [];
     let currentChunk = "";
