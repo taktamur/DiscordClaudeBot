@@ -2,7 +2,6 @@ import { Message, TextChannel } from "../../deps.ts";
 import { CONFIG } from "../utils/Config.ts";
 import { Logger } from "../utils/Logger.ts";
 import { ThreadContext } from "../types/discord.ts";
-import { PromptBuilder } from "../rules/PromptBuilder.ts";
 
 /**
  * Discord メッセージの処理を担当するクラス
@@ -10,25 +9,14 @@ import { PromptBuilder } from "../rules/PromptBuilder.ts";
  */
 export class MessageProcessor {
   private logger: Logger;
-  private promptBuilder: PromptBuilder;
 
   /**
    * MessageProcessor のコンストラクタ
    * @param logger ロガーインスタンス
    * @param promptBuilder プロンプトビルダーインスタンス
    */
-  constructor(logger: Logger, promptBuilder: PromptBuilder) {
+  constructor(logger: Logger) {
     this.logger = logger;
-    this.promptBuilder = promptBuilder;
-  }
-
-  /**
-   * スレッドの会話履歴から Claude Code 用のプロンプトを構築
-   * @param context スレッドの会話履歴
-   * @returns Claude Code に送信するプロンプト文字列
-   */
-  buildPrompt(context: ThreadContext): string {
-    return this.promptBuilder.buildPrompt(context);
   }
 
   /**

@@ -17,6 +17,7 @@ export class DiscordBot {
   private claudeExecutor: ClaudeExecutor;
   /** Discord メッセージ処理部 */
   private messageProcessor: MessageProcessor;
+  private promptBuilder: PromptBuilder;
   /** ログ出力部 */
   private logger: Logger;
   /** メッセージ処理判定ルール */
@@ -42,11 +43,11 @@ export class DiscordBot {
 
     // 共通コンポーネントの初期化
     this.logger = new Logger();
-    const promptBuilder = new PromptBuilder();
+    this.promptBuilder = new PromptBuilder();
 
     // 依存関係を注入してコンポーネントを初期化
-    this.claudeExecutor = new ClaudeExecutor();
-    this.messageProcessor = new MessageProcessor(this.logger, promptBuilder);
+    this.claudeExecutor = new ClaudeExecutor(this.logger);
+    this.messageProcessor = new MessageProcessor(this.logger);
 
     // メッセージ処理ルールを初期化（botIdは後でupdateBotIdで設定）
     this.messageRules = new MessageProcessingRules(
@@ -115,7 +116,7 @@ export class DiscordBot {
       const context = await this.messageProcessor.getThreadHistory(msg);
 
       // 2. Claude Code 用のプロンプトを構築
-      const prompt = this.messageProcessor.buildPrompt(context);
+      const prompt = this.promptBuilder.buildPrompt(context);
 
       // 3. Claude Code を実行して応答を取得
       const response = await this.claudeExecutor.execute(prompt);

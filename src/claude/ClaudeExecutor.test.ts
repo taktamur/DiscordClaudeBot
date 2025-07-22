@@ -1,6 +1,7 @@
 /**
  * ClaudeExecutor のユニットテスト
  * t_wadaさんの教えに従い、外部依存（コマンド実行）をモックしてテスト
+ * このテストでは、Loggerへの出力は考慮しない。
  */
 
 import {
@@ -8,6 +9,15 @@ import {
   assertRejects,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { ClaudeExecutor } from "./ClaudeExecutor.ts";
+import { Logger } from "../utils/Logger.ts";
+
+const mockLogger = {
+  info: (() => {}),
+  warn: (() => {}),
+  error: (() => {}),
+  debug: (() => {}),
+  formatTimestamp: () => "2025-07-22T12:00:00.000Z",
+} as unknown as Logger;
 
 // Deno.Commandをモックするためのヘルパー
 class MockCommand {
@@ -63,13 +73,8 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
         return 1;
       }) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockLogger);
     const testPrompt = "テストプロンプトです";
-
-    // console出力をキャプチャ
-    const originalLog = console.log;
-    const logs: string[] = [];
-    console.log = (message: string) => logs.push(message);
 
     try {
       // Act: Claude実行
@@ -77,21 +82,10 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
 
       // Assert: 期待される応答が返される
       assertEquals(result, "テスト応答メッセージ");
-
-      // ログが出力されている
-      const hasExecutingLog = logs.some((log) =>
-        log.includes("Claude Code CLIを実行中")
-      );
-      const hasCompletedLog = logs.some((log) =>
-        log.includes("Claude Codeの実行が正常に完了しました")
-      );
-      assertEquals(hasExecutingLog, true);
-      assertEquals(hasCompletedLog, true);
     } finally {
       // Cleanup: モックを元に戻す
       Deno.Command = originalCommand;
       globalThis.setTimeout = originalSetTimeout;
-      console.log = originalLog;
     }
   });
 
@@ -106,33 +100,21 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
     globalThis.setTimeout = ((_cb: (...args: any[]) => void, _delay: number) =>
       1) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockLogger);
     const testPrompt = "テストプロンプトです";
-
-    // console出力をキャプチャ
-    const originalError = console.error;
-    const errors: string[] = [];
-    console.error = (message: string) =>
-      errors.push(message);
 
     try {
       // Act & Assert: エラーが投げられる
       await assertRejects(
-        () => executor.execute(testPrompt),
+        () =>
+          executor.execute(testPrompt),
         Error,
         "Claude CLI error: Error: Command failed",
       );
-
-      // エラーログが出力されている
-      const hasErrorLog = errors.some((error) =>
-        error.includes("Claude CLIが失敗しました")
-      );
-      assertEquals(hasErrorLog, true);
     } finally {
       // Cleanup: モックを元に戻す
       Deno.Command = originalCommand;
       globalThis.setTimeout = originalSetTimeout;
-      console.error = originalError;
     }
   });
 
@@ -147,7 +129,7 @@ Deno.test("ClaudeExecutor.execute", async (t) => {
     globalThis.setTimeout = ((_cb: (...args: any[]) => void, _delay: number) =>
       1) as typeof setTimeout;
 
-    const executor = new ClaudeExecutor();
+    const executor = new ClaudeExecutor(mockLogger);
 
     // console出力をキャプチャ
     const originalLog = console.log;

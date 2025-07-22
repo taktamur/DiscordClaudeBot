@@ -12,8 +12,8 @@ export class ClaudeExecutor {
    * ClaudeExecutor のコンストラクタ
    * ログ出力用の Logger インスタンスを初期化します
    */
-  constructor() {
-    this.logger = new Logger();
+  constructor(logger: Logger) {
+    this.logger = logger;
   }
 
   /**
