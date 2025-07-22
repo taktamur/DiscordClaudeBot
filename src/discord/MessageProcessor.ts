@@ -1,4 +1,4 @@
-import { Message } from "../../deps.ts";
+import { Message, TextChannel } from "../../deps.ts";
 import { CONFIG } from "../utils/Config.ts";
 import { Logger } from "../utils/Logger.ts";
 
@@ -86,11 +86,19 @@ export class MessageProcessor {
    * @returns 取得できたメッセージ配列
    */
   private async fetchChannelMessages(
-    // deno-lint-ignore no-explicit-any
-    channel: any, // Harmony ライブラリのAPI変更に対応するため、動的に型チェック
+    channel: TextChannel,
     currentMsg: Message,
     limit: number,
   ): Promise<Message[]> {
+    // Harmonyライブラリには複数のfetchMessages実装パターンが存在するため、
+    // 複数の方法を試行してメッセージ履歴を取得する
+    // - パターン1: 新しいAPI (options object形式)
+    // - パターン2,3: 古いAPIや代替手段 (現在はコメントアウト)
+    //
+    // 背景: HarmonyライブラリのfetchMessagesには既知のバグがあるらしく
+    // ("GET requests may not have a body"エラー)、API変更も頻繁に発生するため
+    // 複数パターンでの対応が必要
+
     // パターン1: fetchMessages with options object
     if (typeof channel.fetchMessages === "function") {
       try {
@@ -111,6 +119,10 @@ export class MessageProcessor {
     }
 
     // パターン2: fetchMessages with number parameter
+    // 注意: コメントアウト中 - 複雑さ軽減のため
+    // Harmonyライブラリの古いAPIや"GET requests may not have a body"エラー対応として残している
+    // 必要に応じて復活可能
+    /*
     if (typeof channel.fetchMessages === "function") {
       try {
         this.logger.debug("Trying fetchMessages with number parameter");
@@ -126,8 +138,13 @@ export class MessageProcessor {
         this.logger.debug(`fetchMessages with number failed: ${error}`);
       }
     }
+    */
 
     // パターン3: messages manager直接アクセス
+    // 注意: コメントアウト中 - 複雑さ軽減のため
+    // HarmonyライブラリのAPI変更やfetchMessages不具合時の代替手段として残している
+    // 必要に応じて復活可能
+    /*
     if (channel.messages && typeof channel.messages.fetch === "function") {
       try {
         this.logger.debug("Trying messages.fetch");
@@ -140,6 +157,7 @@ export class MessageProcessor {
         this.logger.debug(`messages.fetch failed: ${error}`);
       }
     }
+    */
 
     this.logger.warn("すべてのメッセージ取得方法が失敗しました");
     return [];

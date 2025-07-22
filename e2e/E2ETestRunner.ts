@@ -49,7 +49,7 @@ export class E2ETestRunner {
   private readonly DEFAULT_SCENARIOS: E2ETestScenario[] = [
     {
       name: "基本応答E2Eテスト",
-      message: "こんにちは",
+      message: "こんにちは! これはe2eテストです。",
       timeoutMs: 30000, // 30秒
     },
     {
