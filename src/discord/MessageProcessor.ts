@@ -1,6 +1,6 @@
 import { Message } from "../../deps.ts";
-import { CONFIG } from "../config.ts";
-import { Logger } from "../utils/logger.ts";
+import { CONFIG } from "../utils/Config.ts";
+import { Logger } from "../utils/Logger.ts";
 
 /**
  * スレッドの会話履歴を表すインターフェース

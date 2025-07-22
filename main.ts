@@ -3,10 +3,10 @@
  * コマンドライン引数を解析してボットを起動します
  */
 
-import { DiscordBot } from "./src/bot.ts";
-import { validateConfig } from "./src/config.ts";
-import { Logger } from "./src/utils/logger.ts";
-import { E2ETestRunner } from "./e2e/runner.ts";
+import { DiscordBot } from "./src/DiscordBot.ts";
+import { validateConfig } from "./src/utils/Config.ts";
+import { Logger } from "./src/utils/Logger.ts";
+import { E2ETestRunner } from "./e2e/E2ETestRunner.ts";
 
 const logger = new Logger();
 

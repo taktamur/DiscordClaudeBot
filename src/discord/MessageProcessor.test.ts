@@ -5,7 +5,7 @@
  */
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { MessageProcessor, ThreadContext } from "./message-processor.ts";
+import { MessageProcessor, ThreadContext } from "./MessageProcessor.ts";
 
 Deno.test("MessageProcessor.buildPrompt", async (t) => {
   const processor = new MessageProcessor();

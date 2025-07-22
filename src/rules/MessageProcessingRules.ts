@@ -1,5 +1,5 @@
 import { Message } from "../../deps.ts";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/Logger.ts";
 
 /**
  * メッセージ処理判定ルールクラス

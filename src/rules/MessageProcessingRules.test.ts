@@ -1,6 +1,6 @@
 import { assertEquals, assertExists } from "../../deps.ts";
 import { MessageProcessingRules } from "./MessageProcessingRules.ts";
-import { Logger } from "../utils/logger.ts";
+import { Logger } from "../utils/Logger.ts";
 import { Message } from "../../deps.ts";
 
 // モックMessage作成用のヘルパー関数

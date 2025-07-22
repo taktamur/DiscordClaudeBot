@@ -4,7 +4,7 @@
  */
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { Logger } from "./logger.ts";
+import { Logger } from "./Logger.ts";
 
 // console出力をキャプチャするためのスパイ関数
 function createConsoleSpies() {

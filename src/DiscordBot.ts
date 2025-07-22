@@ -1,8 +1,8 @@
 import { Client, GatewayIntents, Message } from "../deps.ts";
-import { CONFIG } from "./config.ts";
-import { ClaudeExecutor } from "./claude/executor.ts";
-import { MessageProcessor } from "./discord/message-processor.ts";
-import { Logger } from "./utils/logger.ts";
+import { CONFIG } from "./utils/Config.ts";
+import { ClaudeExecutor } from "./claude/ClaudeExecutor.ts";
+import { MessageProcessor } from "./discord/MessageProcessor.ts";
+import { Logger } from "./utils/Logger.ts";
 import { MessageProcessingRules } from "./rules/MessageProcessingRules.ts";
 
 /**

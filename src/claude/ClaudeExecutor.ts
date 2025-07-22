@@ -1,5 +1,5 @@
-import { CONFIG } from "../config.ts";
-import { Logger } from "../utils/logger.ts";
+import { CONFIG } from "../utils/Config.ts";
+import { Logger } from "../utils/Logger.ts";
 
 /**
  * Claude Code CLI を実行するクラス

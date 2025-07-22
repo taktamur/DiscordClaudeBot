@@ -4,8 +4,8 @@
  */
 
 import { Client, GatewayIntents, Message, TextChannel } from "../deps.ts";
-import { CONFIG } from "../src/config.ts";
-import { Logger } from "../src/utils/logger.ts";
+import { CONFIG } from "../src/utils/Config.ts";
+import { Logger } from "../src/utils/Logger.ts";
 
 /**
  * E2Eテストシナリオの定義

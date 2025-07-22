@@ -7,7 +7,7 @@ import {
   assertEquals,
   assertRejects,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { ClaudeExecutor } from "./executor.ts";
+import { ClaudeExecutor } from "./ClaudeExecutor.ts";
 
 // Deno.Commandをモックするためのヘルパー
 class MockCommand {

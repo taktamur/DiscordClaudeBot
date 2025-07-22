@@ -4,7 +4,7 @@
  */
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
-import { validateConfig } from "./config.ts";
+import { validateConfig } from "./Config.ts";
 
 Deno.test("validateConfig", async (t) => {
   await t.step(
@@ -79,7 +79,7 @@ Deno.test("validateConfig", async (t) => {
 Deno.test("CONFIG値の検証", async (t) => {
   // 動的インポートで設定値をテスト時に取得
   await t.step("CONFIG定数が適切な型と値を持つ", async () => {
-    const { CONFIG } = await import("./config.ts");
+    const { CONFIG } = await import("./Config.ts");
 
     // タイムアウト値は正の数であること
     assertEquals(typeof CONFIG.CLAUDE_TIMEOUT_SECONDS, "number");

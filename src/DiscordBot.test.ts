@@ -1,5 +1,5 @@
 import { assertEquals, assertExists, assertInstanceOf } from "../deps.ts";
-import { DiscordBot } from "./bot.ts";
+import { DiscordBot } from "./DiscordBot.ts";
 import { Client } from "../deps.ts";
 
 Deno.test("DiscordBot", async (t) => {
