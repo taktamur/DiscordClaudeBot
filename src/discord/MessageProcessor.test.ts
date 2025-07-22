@@ -15,41 +15,19 @@ import type { Message } from "../../deps.ts";
 import { MessageProcessor } from "./MessageProcessor.ts";
 import { Logger } from "../utils/Logger.ts";
 
-// テスト用モック関数とログの記録
-interface MockCall {
-  method: string;
-  args: unknown[];
-}
-
-interface MockLogger {
-  info: (message: string) => void;
-  warn: (message: string) => void;
-  error: (message: string) => void;
-  debug: (message: string) => void;
-  formatTimestamp: () => string;
-  calls: MockCall[];
-}
-
-// テスト用のモックオブジェクト作成関数
-function createMockLogger(): MockLogger {
-  const calls: MockCall[] = [];
-  return {
-    info: (message: string) => calls.push({ method: "info", args: [message] }),
-    warn: (message: string) => calls.push({ method: "warn", args: [message] }),
-    error: (message: string) =>
-      calls.push({ method: "error", args: [message] }),
-    debug: (message: string) =>
-      calls.push({ method: "debug", args: [message] }),
-    formatTimestamp: () => "2025-07-22T12:00:00.000Z",
-    calls,
-  };
-}
+// テスト用のシンプルなmockLogger（空の関数で構成）
+const mockLogger = {
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+  debug: () => {},
+  formatTimestamp: () => "2025-07-22T12:00:00.000Z",
+} as unknown as Logger;
 
 Deno.test("MessageProcessor", async (t) => {
   await t.step("コンストラクタ", async (t) => {
     await t.step("正常にインスタンスが作成される", () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       assertEquals(typeof processor, "object");
     });
@@ -57,8 +35,7 @@ Deno.test("MessageProcessor", async (t) => {
 
   await t.step("getThreadHistory", async (t) => {
     await t.step("正常なメッセージ履歴取得", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       const fetchedMessages = [
         {
@@ -112,8 +89,7 @@ Deno.test("MessageProcessor", async (t) => {
     });
 
     await t.step("メッセージ取得失敗時のフォールバック", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       // spy()を使用したエラーを投げるモック
       const fetchMessagesSpy = spy(() =>
@@ -145,8 +121,7 @@ Deno.test("MessageProcessor", async (t) => {
     });
 
     await t.step("空の履歴でもフォールバック動作", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       // spy()を使用した空配列を返すモック
       const fetchMessagesSpy = spy(() =>
@@ -181,8 +156,7 @@ Deno.test("MessageProcessor", async (t) => {
 
   await t.step("sendResponse", async (t) => {
     await t.step("単一チャンクの送信", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       // spy()を使用したシンプルなモック作成
       const replySpy = spy(() => Promise.resolve());
@@ -199,8 +173,7 @@ Deno.test("MessageProcessor", async (t) => {
     });
 
     await t.step("複数チャンクの分割送信", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       // spy()を使用したシンプルなモック作成
       const replySpy = spy(() => Promise.resolve());
@@ -234,17 +207,13 @@ Deno.test("MessageProcessor", async (t) => {
     });
 
     await t.step("空のチャンク配列でもエラーにならない", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
-      // spy()を使用したシンプルなモック作成
-      const replySpy = spy(() => Promise.resolve());
-      const sendSpy = spy(() => Promise.resolve());
-
+      // spy()を直接プロパティに設定（アサーション不要のため短縮化）
       const mockMessage = {
-        reply: replySpy,
+        reply: spy(() => Promise.resolve()),
         channel: {
-          send: sendSpy,
+          send: spy(() => Promise.resolve()),
         },
       } as unknown as Message;
 
@@ -255,8 +224,7 @@ Deno.test("MessageProcessor", async (t) => {
     });
 
     await t.step("送信エラー時の例外処理", async () => {
-      const mockLogger = createMockLogger();
-      const processor = new MessageProcessor(mockLogger as unknown as Logger);
+      const processor = new MessageProcessor(mockLogger);
 
       // spy()を使用したエラーを投げるモック
       const replySpy = spy(() => Promise.reject(new Error("Network error")));
