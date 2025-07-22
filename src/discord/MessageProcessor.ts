@@ -1,6 +1,7 @@
 import { Message, TextChannel } from "../../deps.ts";
 import { CONFIG } from "../utils/Config.ts";
 import { Logger } from "../utils/Logger.ts";
+import { MessageSplitter } from "../rules/MessageSplitter.ts";
 import { ThreadContext } from "../types/discord.ts";
 
 /**
@@ -185,7 +186,7 @@ export class MessageProcessor {
     msg: Message,
     response: string,
   ): Promise<void> {
-    const chunks = this.splitMessage(response);
+    const chunks = MessageSplitter.split(response, CONFIG.MAX_MESSAGE_LENGTH);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -199,53 +200,6 @@ export class MessageProcessor {
 
       await this.delay(1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND);
     }
-  }
-
-  /**
-   * メッセージを Discord の文字制限に合わせて分割する内部メソッド
-   * 行単位での分割を優先し、必要に応じて単語単位でも分割します
-   * @param message 分割対象のメッセージ
-   * @returns 分割されたメッセージ配列
-   */
-  // FIXME: 別ファイルに分離する
-  private splitMessage(message: string): string[] {
-    const chunks: string[] = [];
-    let currentChunk = "";
-
-    const lines = message.split("\n");
-
-    for (const line of lines) {
-      if (currentChunk.length + line.length + 1 > CONFIG.MAX_MESSAGE_LENGTH) {
-        if (currentChunk) {
-          chunks.push(currentChunk.trim());
-          currentChunk = "";
-        }
-
-        if (line.length > CONFIG.MAX_MESSAGE_LENGTH) {
-          const words = line.split(" ");
-          for (const word of words) {
-            if (
-              currentChunk.length + word.length + 1 > CONFIG.MAX_MESSAGE_LENGTH
-            ) {
-              chunks.push(currentChunk.trim());
-              currentChunk = word;
-            } else {
-              currentChunk += (currentChunk ? " " : "") + word;
-            }
-          }
-        } else {
-          currentChunk = line;
-        }
-      } else {
-        currentChunk += (currentChunk ? "\n" : "") + line;
-      }
-    }
-
-    if (currentChunk) {
-      chunks.push(currentChunk.trim());
-    }
-
-    return chunks;
   }
 
   /**
