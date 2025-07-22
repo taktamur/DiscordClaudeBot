@@ -3,12 +3,17 @@
   "specifiers": {
     "jsr:@denosaurs/event@2.0.2": "2.0.2",
     "jsr:@harmony/harmony@*": "2.9.1",
+    "jsr:@std/assert@*": "0.217.0",
     "jsr:@std/assert@0.217": "0.217.0",
+    "jsr:@std/assert@^1.0.13": "1.0.13",
     "jsr:@std/bytes@0.217": "0.217.0",
     "jsr:@std/encoding@0.217": "0.217.0",
+    "jsr:@std/fmt@0.217": "0.217.0",
     "jsr:@std/fs@0.217": "0.217.0",
+    "jsr:@std/internal@^1.0.6": "1.0.9",
     "jsr:@std/io@0.217": "0.217.0",
     "jsr:@std/path@0.217": "0.217.0",
+    "jsr:@std/testing@*": "1.0.14",
     "npm:@evan/wasm@0.0.95": "0.0.95",
     "npm:@types/node@*": "22.15.15",
     "npm:redis@4.6.13": "4.6.13_@redis+client@1.5.14",
@@ -31,7 +36,16 @@
       ]
     },
     "@std/assert@0.217.0": {
-      "integrity": "c98e279362ca6982d5285c3b89517b757c1e3477ee9f14eb2fdf80a45aaa9642"
+      "integrity": "c98e279362ca6982d5285c3b89517b757c1e3477ee9f14eb2fdf80a45aaa9642",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@std/assert@1.0.13": {
+      "integrity": "ae0d31e41919b12c656c742b22522c32fb26ed0cba32975cb0de2a273cb68b29",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
     },
     "@std/bytes@0.217.0": {
       "integrity": "58209975707478fe12423d0b3270f4d400fd135a4edb1f50eeca8f92e34e6580"
@@ -39,11 +53,17 @@
     "@std/encoding@0.217.0": {
       "integrity": "b03e8ff94c98d6b6a02c02c5cf8e5d203400155516248964fc4559abc04669dc"
     },
+    "@std/fmt@0.217.0": {
+      "integrity": "cb99f82500b8da20202fedfa8bb94dd0222e81f0494ed9087de20ee3d8a39a8d"
+    },
     "@std/fs@0.217.0": {
       "integrity": "0bfff5f3618d68c385b28b4ffbf3a15c98293a0f1186444458b62e0111ce77b2",
       "dependencies": [
         "jsr:@std/path"
       ]
+    },
+    "@std/internal@1.0.9": {
+      "integrity": "bdfb97f83e4db7a13e8faab26fb1958d1b80cc64366501af78a0aee151696eb8"
     },
     "@std/io@0.217.0": {
       "integrity": "08d3dd7c10956d1433be95306ec15179cdebe49a0ce5a74238fabf140bb74382",
@@ -54,7 +74,13 @@
     "@std/path@0.217.0": {
       "integrity": "1217cc25534bca9a2f672d7fe7c6f356e4027df400c0e85c0ef3e4343bc67d11",
       "dependencies": [
-        "jsr:@std/assert"
+        "jsr:@std/assert@0.217"
+      ]
+    },
+    "@std/testing@1.0.14": {
+      "integrity": "144b3737105b9071cb50c957681f58a1b8ec0f3e5b19ad830f401c5fa931e8f0",
+      "dependencies": [
+        "jsr:@std/assert@^1.0.13"
       ]
     }
   },

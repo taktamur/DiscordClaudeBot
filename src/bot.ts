@@ -3,6 +3,7 @@ import { CONFIG } from "./config.ts";
 import { ClaudeExecutor } from "./claude/executor.ts";
 import { MessageProcessor } from "./discord/message-processor.ts";
 import { Logger } from "./utils/logger.ts";
+import { MessageProcessingRules } from "./rules/MessageProcessingRules.ts";
 
 /**
  * Discord Claude Bot のメインクラス
@@ -17,6 +18,8 @@ export class DiscordBot {
   private messageProcessor: MessageProcessor;
   /** ログ出力部 */
   private logger: Logger;
+  /** メッセージ処理判定ルール */
+  private messageRules: MessageProcessingRules;
   /** テストモードフラグ */
   private isTestMode: boolean = false;
   /** 処理中のメッセージIDを追跡（重複防止用） */
@@ -40,6 +43,13 @@ export class DiscordBot {
     this.claudeExecutor = new ClaudeExecutor();
     this.messageProcessor = new MessageProcessor();
     this.logger = new Logger();
+
+    // メッセージ処理ルールを初期化（botIdは後でupdateBotIdで設定）
+    this.messageRules = new MessageProcessingRules(
+      "",
+      this.isTestMode,
+      this.logger,
+    );
 
     this.setupEventHandlers();
   }
@@ -70,66 +80,17 @@ export class DiscordBot {
         return;
       }
 
-      if (this.shouldProcessMessage(msg)) {
+      // botIdを最新の状態に更新
+      const botId = this.client.user?.id || "";
+      this.messageRules.updateBotId(botId);
+
+      if (this.messageRules.shouldProcess(msg)) {
         this.logger.info("メンション検知 - 処理開始");
         await this.handleMention(msg);
       } else {
         this.logger.info("メンション対象外 - 処理スキップ");
       }
     });
-  }
-
-  /**
-   * メッセージを処理すべきかを判定
-   * @param msg Discord メッセージオブジェクト
-   * @returns 処理すべき場合 true、そうでなければ false
-   */
-  private shouldProcessMessage(msg: Message): boolean {
-    const isBot = msg.author.bot;
-    const botId = this.client.user?.id || "";
-    const isOwnMessage = msg.author.id === botId;
-
-    // 【重要】自分のメッセージは絶対に処理しない（無限ループ防止）
-    if (isOwnMessage) {
-      this.logger.info("自分のメッセージのため処理をスキップ");
-      return false;
-    }
-
-    // メンション検知: Harmonyの解析結果 + 文字列パターンマッチング
-    const hasMentionObj = msg.mentions.users.has(botId);
-    const hasMentionText = msg.content.includes(`<@${botId}>`);
-    const hasMention = hasMentionObj || hasMentionText;
-
-    // デバッグ用: メンションオブジェクトの詳細
-    const mentionedUsers = Array.from(msg.mentions.users.keys());
-    this.logger.info(
-      `メンション詳細: users=[${
-        mentionedUsers.join(",")
-      }], mentionObj=${hasMentionObj}, mentionText=${hasMentionText}, content="${msg.content}"`,
-    );
-    this.logger.info(
-      `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`,
-    );
-
-    // 他のボットメッセージは除外（無限ループ防止）
-    // ただし、E2Eテストモードの場合のみ特定のCaller Botは許可
-    if (isBot) {
-      if (this.isTestMode) {
-        // E2Eテスト時はCaller Botからのメッセージのみ許可
-        const callerBotId = "1396643708224540752"; // ClaudeBot-e2e-caller
-        if (msg.author.id !== callerBotId) {
-          this.logger.info(
-            "テストモード中の他ボットメッセージのため処理をスキップ",
-          );
-          return false;
-        }
-      } else {
-        this.logger.info("他のボットメッセージのため処理をスキップ");
-        return false;
-      }
-    }
-
-    return hasMention;
   }
 
   /**
@@ -243,6 +204,7 @@ export class DiscordBot {
    */
   setTestMode(isTestMode: boolean): void {
     this.isTestMode = isTestMode;
+    this.messageRules.setTestMode(isTestMode);
     this.messageProcessor.setTestMode(isTestMode);
     this.logger.info(`テストモード設定: ${isTestMode}`);
   }

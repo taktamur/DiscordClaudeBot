@@ -13,3 +13,20 @@ export {
 export type {
   ClientOptions,   // Discord クライアントのオプション型
 } from "@harmony/harmony";
+
+// テスト用関数
+export {
+  assertEquals,
+  assertRejects,
+  assertExists,
+  assertInstanceOf,
+} from "jsr:@std/assert";
+
+export {
+  spy,
+  stub,
+  assertSpyCall,
+  assertSpyCalls,
+  returnsNext,
+  returnsArg,
+} from "jsr:@std/testing/mock";
