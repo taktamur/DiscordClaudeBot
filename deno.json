@@ -1,0 +1,22 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env main.ts",
+    "test": "deno test --allow-env --allow-read --allow-net --allow-run src/ e2e/",
+    "test:watch": "deno test --allow-env --allow-read --watch src/",
+    "e2e": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env.e2e main.ts --test --timeout 120",
+    "e2e:quick": "deno run --allow-net --allow-env --allow-run --allow-read --env-file=.env.e2e main.ts --test --timeout 60",
+    "typecheck": "deno check main.ts src/ e2e/",
+    "all": "echo '🔧 Running deno fmt...' && deno fmt && echo '✅ fmt complete' && echo '🔍 Running deno lint...' && deno lint && echo '✅ lint complete' && echo '🧪 Running deno test...' && deno task test && echo '✅ test complete' && echo '📝 Running typecheck...' && deno task typecheck && echo '✅ All tasks completed!'"
+  },
+  "fmt": {
+    "include": ["src/", "e2e/", "main.ts"],
+    "exclude": ["tmp/"] 
+  },
+  "lint": {
+    "include": ["src/", "e2e/", "main.ts"],
+    "exclude": ["tmp/"] 
+  },
+  "imports": {
+    "@harmony/harmony": "jsr:@harmony/harmony" 
+  }
+}
