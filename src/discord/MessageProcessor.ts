@@ -1,7 +1,6 @@
 import { Message, TextChannel } from "../../deps.ts";
 import { CONFIG } from "../utils/Config.ts";
 import { Logger } from "../utils/Logger.ts";
-import { MessageSplitter } from "../rules/MessageSplitter.ts";
 import { ThreadContext } from "../types/discord.ts";
 
 /**
@@ -98,47 +97,6 @@ export class MessageProcessor {
       this.logger.debug(`fetchMessages with options failed: ${error}`);
     }
 
-    // パターン2: fetchMessages with number parameter
-    // 注意: コメントアウト中 - 複雑さ軽減のため
-    // Harmonyライブラリの古いAPIや"GET requests may not have a body"エラー対応として残している
-    // 必要に応じて復活可能
-    /*
-    if (typeof channel.fetchMessages === "function") {
-      try {
-        this.logger.debug("Trying fetchMessages with number parameter");
-        const result = await channel.fetchMessages(Math.min(limit, 100));
-
-        if (result && typeof result.array === "function") {
-          const messages = result.array().reverse();
-          return messages.filter((m: Message) => m.id !== currentMsg.id).concat(
-            [currentMsg],
-          );
-        }
-      } catch (error) {
-        this.logger.debug(`fetchMessages with number failed: ${error}`);
-      }
-    }
-    */
-
-    // パターン3: messages manager直接アクセス
-    // 注意: コメントアウト中 - 複雑さ軽減のため
-    // HarmonyライブラリのAPI変更やfetchMessages不具合時の代替手段として残している
-    // 必要に応じて復活可能
-    /*
-    if (channel.messages && typeof channel.messages.fetch === "function") {
-      try {
-        this.logger.debug("Trying messages.fetch");
-        // 現在キャッシュされているメッセージを取得
-        const cachedMessages = channel.messages.array?.() || [];
-        if (cachedMessages.length > 0) {
-          return cachedMessages.reverse().slice(0, limit);
-        }
-      } catch (error) {
-        this.logger.debug(`messages.fetch failed: ${error}`);
-      }
-    }
-    */
-
     this.logger.warn("すべてのメッセージ取得方法が失敗しました");
     return [];
   }
@@ -157,13 +115,12 @@ export class MessageProcessor {
    * Discord に応答メッセージを送信する
    * 2000文字制限を超える場合は自動的に分割投稿を行います
    * @param msg 元のメッセージ（返信先）
-   * @param response 送信する応答内容
+   * @param chunks 分割済みのメッセージ配列
    */
-  async sendResponse(msg: Message, response: string): Promise<void> {
+  async sendResponse(msg: Message, chunks: string[]): Promise<void> {
     this.logger.info("Discordに応答を送信中");
 
     try {
-      const chunks = MessageSplitter.split(response, CONFIG.MAX_MESSAGE_LENGTH);
       await this.sendMultipleMessages(msg, chunks);
 
       this.logger.info("応答を正常に送信しました");

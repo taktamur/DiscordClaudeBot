@@ -5,6 +5,7 @@ import { MessageProcessor } from "./discord/MessageProcessor.ts";
 import { Logger } from "./utils/Logger.ts";
 import { MessageProcessingRules } from "./rules/MessageProcessingRules.ts";
 import { PromptBuilder } from "./rules/PromptBuilder.ts";
+import { MessageSplitter } from "./rules/MessageSplitter.ts";
 
 /**
  * Discord Claude Bot のメインクラス
@@ -121,8 +122,12 @@ export class DiscordBot {
       // 3. Claude Code を実行して応答を取得
       const response = await this.claudeExecutor.execute(prompt);
 
-      // 4. Discord に応答を送信（分割投稿対応）
-      await this.messageProcessor.sendResponse(msg, response);
+      // 4. 応答を分割する
+      const chunks = MessageSplitter.split(response, CONFIG.MAX_MESSAGE_LENGTH);
+
+      // 5. Discord に応答を送信
+      await this.messageProcessor.sendResponse(msg, chunks);
+
       this.lastMessageTime = Date.now();
     } catch (error) {
       this.logger.error(`メンション処理エラー: ${error}`);
