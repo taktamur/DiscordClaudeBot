@@ -1,17 +1,8 @@
 import { Message, TextChannel } from "../../deps.ts";
 import { CONFIG } from "../utils/Config.ts";
 import { Logger } from "../utils/Logger.ts";
-
-/**
- * スレッドの会話履歴を表すインターフェース
- */
-export interface ThreadContext {
-  messages: Array<{
-    author: string; // 発言者の名前
-    content: string; // メッセージ内容
-    timestamp: string; // 投稿時刻（ISO形式）
-  }>;
-}
+import { ThreadContext } from "../types/discord.ts";
+import { PromptBuilder } from "../rules/PromptBuilder.ts";
 
 /**
  * Discord メッセージの処理を担当するクラス
@@ -20,12 +11,23 @@ export interface ThreadContext {
 export class MessageProcessor {
   private logger: Logger;
   private isTestMode: boolean = false;
+  private promptBuilder: PromptBuilder;
 
   /**
    * MessageProcessor のコンストラクタ
    */
   constructor() {
     this.logger = new Logger();
+    this.promptBuilder = new PromptBuilder();
+  }
+
+  /**
+   * スレッドの会話履歴から Claude Code 用のプロンプトを構築
+   * @param context スレッドの会話履歴
+   * @returns Claude Code に送信するプロンプト文字列
+   */
+  buildPrompt(context: ThreadContext): string {
+    return this.promptBuilder.buildPrompt(context);
   }
 
   /**
@@ -167,58 +169,6 @@ export class MessageProcessor {
         timestamp: msg.createdAt.toISOString(),
       }],
     };
-  }
-
-  /**
-   * スレッドの会話履歴から Claude Code 用のプロンプトを構築
-   * 単一メッセージと複数メッセージで異なる形式を使用します
-   * @param context スレッドの会話履歴
-   * @returns Claude Code に送信するプロンプト文字列
-   */
-  buildPrompt(context: ThreadContext): string {
-    const messageCount = context.messages.length;
-
-    if (messageCount === 1) {
-      // 単一メッセージの場合はシンプルなプロンプト
-      const currentMessage = context.messages[0];
-      return `Discordでメンションを受けました。以下のメッセージに適切に応答してください。
-
-ユーザー: ${currentMessage.author}
-メッセージ: ${currentMessage.content}
-時刻: ${currentMessage.timestamp}
-
-上記のメッセージに対して、適切な返答をしてください。`;
-    }
-
-    // 複数メッセージの場合は会話履歴として処理
-    const messageHistory = context.messages
-      .map((msg, index) => {
-        const timeStr = this.formatTimestamp(msg.timestamp);
-        const isLatest = index === context.messages.length - 1;
-        const prefix = isLatest ? "→" : " ";
-        return `${prefix} [${timeStr}] ${msg.author}: ${msg.content}`;
-      })
-      .join("\n");
-
-    return `以下はDiscordスレッドの会話履歴です（${messageCount}件のメッセージ）。最新のメッセージ（→印）に対して、会話の文脈を踏まえて適切に応答してください。
-
-会話履歴:
-${messageHistory}
-
-会話の流れを理解して、最新のメッセージに対する適切な返答をしてください。`;
-  }
-
-  private formatTimestamp(isoString: string): string {
-    try {
-      const date = new Date(isoString);
-      return date.toLocaleTimeString("ja-JP", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return isoString.split("T")[1]?.split(".")[0] || isoString;
-    }
   }
 
   /**
