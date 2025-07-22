@@ -109,7 +109,7 @@ Deno.test("MessageProcessingRules", async (t) => {
   });
 
   await t.step("shouldProcess - ボットメッセージ", async (t) => {
-    await t.step("通常モード: 他のボットメッセージは処理しない", () => {
+    await t.step("通常モード: 他のボットメッセージも処理する", () => {
       const rules = new MessageProcessingRules(botId, false, logger);
       const msg = createMockMessage({
         authorId: "other-bot",
@@ -119,7 +119,7 @@ Deno.test("MessageProcessingRules", async (t) => {
       });
 
       const result = rules.shouldProcess(msg);
-      assertEquals(result, false);
+      assertEquals(result, true);
     });
 
     await t.step("テストモード: Caller Botは処理する", () => {

@@ -82,9 +82,9 @@ export class MessageProcessingRules {
       }
       return true;
     } else {
-      // 通常モード時は他のボットメッセージを除外
-      this.logger.info("他のボットメッセージのため処理をスキップ");
-      return false;
+      // 通常モード時は他のボットメッセージも処理対象とする
+      this.logger.info("他のボットメッセージも処理対象として受付");
+      return true;
     }
   }
 
