@@ -121,36 +121,23 @@ export class MessageProcessor {
     this.logger.info("Discordに応答を送信中");
 
     try {
-      await this.sendMultipleMessages(msg, chunks);
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const prefix = i === 0 ? "" : "(続き) ";
+
+        if (i === 0) {
+          await msg.reply(prefix + chunk);
+        } else {
+          await msg.channel.send(prefix + chunk);
+        }
+
+        await this.delay(1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND);
+      }
 
       this.logger.info("応答を正常に送信しました");
     } catch (error) {
       this.logger.error(`応答の送信に失敗しました: ${error}`);
       throw error;
-    }
-  }
-
-  /**
-   * 複数のメッセージに分割して送信する内部メソッド
-   * 最初のメッセージにのみメンションを付け、後続は「(続き)」プレフィックスを使用
-   * @param msg 元のメッセージ
-   * @param chunks 分割済みのメッセージ配列
-   */
-  private async sendMultipleMessages(
-    msg: Message,
-    chunks: string[],
-  ): Promise<void> {
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const prefix = i === 0 ? "" : "(続き) ";
-
-      if (i === 0) {
-        await msg.reply(prefix + chunk);
-      } else {
-        await msg.channel.send(prefix + chunk);
-      }
-
-      await this.delay(1000 / CONFIG.RATE_LIMIT_MESSAGES_PER_SECOND);
     }
   }
 
