@@ -14,10 +14,12 @@ export class MessageProcessor {
 
   /**
    * MessageProcessor のコンストラクタ
+   * @param logger ロガーインスタンス
+   * @param promptBuilder プロンプトビルダーインスタンス
    */
-  constructor() {
-    this.logger = new Logger();
-    this.promptBuilder = new PromptBuilder();
+  constructor(logger: Logger, promptBuilder: PromptBuilder) {
+    this.logger = logger;
+    this.promptBuilder = promptBuilder;
   }
 
   /**

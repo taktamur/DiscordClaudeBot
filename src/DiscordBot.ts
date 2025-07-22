@@ -4,6 +4,7 @@ import { ClaudeExecutor } from "./claude/ClaudeExecutor.ts";
 import { MessageProcessor } from "./discord/MessageProcessor.ts";
 import { Logger } from "./utils/Logger.ts";
 import { MessageProcessingRules } from "./rules/MessageProcessingRules.ts";
+import { PromptBuilder } from "./rules/PromptBuilder.ts";
 
 /**
  * Discord Claude Bot のメインクラス
@@ -38,9 +39,14 @@ export class DiscordBot {
         GatewayIntents.MESSAGE_CONTENT, // メッセージ内容の取得（2022年以降必須）
       ],
     });
-    this.claudeExecutor = new ClaudeExecutor();
-    this.messageProcessor = new MessageProcessor();
+
+    // 共通コンポーネントの初期化
     this.logger = new Logger();
+    const promptBuilder = new PromptBuilder();
+
+    // 依存関係を注入してコンポーネントを初期化
+    this.claudeExecutor = new ClaudeExecutor();
+    this.messageProcessor = new MessageProcessor(this.logger, promptBuilder);
 
     // メッセージ処理ルールを初期化（botIdは後でupdateBotIdで設定）
     this.messageRules = new MessageProcessingRules(

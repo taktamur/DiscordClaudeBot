@@ -6,9 +6,24 @@
 
 import { assertEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import { MessageProcessor } from "./MessageProcessor.ts";
+import { Logger } from "../utils/Logger.ts";
+import { PromptBuilder } from "../rules/PromptBuilder.ts";
 
 Deno.test("MessageProcessor.splitMessage (private method testing)", async (t) => {
-  const processor = new MessageProcessor();
+  // テスト用のモックインスタンスを作成
+  const mockLogger = {
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {},
+    formatTimestamp: () => "2025-07-22T12:00:00.000Z",
+  } as unknown as Logger;
+
+  const mockPromptBuilder = {
+    buildPrompt: () => "mocked prompt",
+  } as unknown as PromptBuilder;
+
+  const processor = new MessageProcessor(mockLogger, mockPromptBuilder);
 
   // privateメソッドをテストするため、anyキャストを使用
   // t_wadaさんも「テストのためなら多少の妥協は必要」と言っている
