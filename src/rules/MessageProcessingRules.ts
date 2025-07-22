@@ -28,11 +28,6 @@ export class MessageProcessingRules {
     const hasMention = this.hasMention(msg);
     this.logMentionDetails(msg, hasMention);
 
-    // 他のボットメッセージの処理判定
-    if (!this.shouldProcessBotMessage(msg)) {
-      return false;
-    }
-
     return hasMention;
   }
 
@@ -55,37 +50,6 @@ export class MessageProcessingRules {
     const hasMentionObj = msg.mentions.users.has(this.botId);
     const hasMentionText = msg.content.includes(`<@${this.botId}>`);
     return hasMentionObj || hasMentionText;
-  }
-
-  /**
-   * ボットメッセージを処理すべきかを判定
-   * @param msg Discord メッセージオブジェクト
-   * @returns 処理すべき場合 true
-   */
-  private shouldProcessBotMessage(msg: Message): boolean {
-    const isBot = msg.author.bot;
-
-    // 人間のメッセージは常に処理対象
-    if (!isBot) {
-      return true;
-    }
-
-    // テストモード時の特別処理
-    if (this.isTestMode) {
-      // E2Eテスト時はCaller Botからのメッセージのみ許可
-      const callerBotId = "1396643708224540752"; // ClaudeBot-e2e-caller
-      if (msg.author.id !== callerBotId) {
-        this.logger.info(
-          "テストモード中の他ボットメッセージのため処理をスキップ",
-        );
-        return false;
-      }
-      return true;
-    } else {
-      // 通常モード時は他のボットメッセージも処理対象とする
-      this.logger.info("他のボットメッセージも処理対象として受付");
-      return true;
-    }
   }
 
   /**
