@@ -41,13 +41,13 @@ Deno.test("MessageProcessingRules", async (t) => {
 
   await t.step("コンストラクタ", async (t) => {
     await t.step("正常にインスタンスが作成される", () => {
-      const rules = new MessageProcessingRules(botId, false, logger);
+      const rules = new MessageProcessingRules(botId, logger);
       assertExists(rules);
     });
   });
 
   await t.step("shouldProcess - 自分のメッセージ", async (t) => {
-    const rules = new MessageProcessingRules(botId, false, logger);
+    const rules = new MessageProcessingRules(botId, logger);
 
     await t.step("自分のメッセージは処理しない", () => {
       const msg = createMockMessage({
@@ -72,7 +72,7 @@ Deno.test("MessageProcessingRules", async (t) => {
   });
 
   await t.step("shouldProcess - メンション検知", async (t) => {
-    const rules = new MessageProcessingRules(botId, false, logger);
+    const rules = new MessageProcessingRules(botId, logger);
 
     await t.step("mentions.users.hasでメンション検知", () => {
       const msg = createMockMessage({
@@ -110,7 +110,7 @@ Deno.test("MessageProcessingRules", async (t) => {
 
   await t.step("updateBotId", async (t) => {
     await t.step("botIdが更新される", () => {
-      const rules = new MessageProcessingRules("old-bot-id", false, logger);
+      const rules = new MessageProcessingRules("old-bot-id", logger);
       const newBotId = "new-bot-123";
 
       rules.updateBotId(newBotId);
@@ -123,26 +123,6 @@ Deno.test("MessageProcessingRules", async (t) => {
 
       const result = rules.shouldProcess(msg);
       assertEquals(result, false); // 自分のメッセージなので処理しない
-    });
-  });
-
-  await t.step("setTestMode", async (t) => {
-    await t.step("テストモードが設定される", () => {
-      const rules = new MessageProcessingRules(botId, false, logger);
-
-      rules.setTestMode(true);
-
-      // テストモードでCaller Botメッセージをテスト
-      const callerBotId = "1396643708224540752";
-      const msg = createMockMessage({
-        authorId: callerBotId,
-        authorBot: true,
-        content: `<@${botId}> hello`,
-        mentionedUsers: [botId],
-      });
-
-      const result = rules.shouldProcess(msg);
-      assertEquals(result, true);
     });
   });
 });

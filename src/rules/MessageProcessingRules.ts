@@ -8,7 +8,6 @@ import { Logger } from "../utils/Logger.ts";
 export class MessageProcessingRules {
   constructor(
     private botId: string,
-    private isTestMode: boolean,
     private logger: Logger,
   ) {}
 
@@ -70,7 +69,7 @@ export class MessageProcessingRules {
       }], mentionObj=${hasMentionObj}, mentionText=${hasMentionText}, content="${msg.content}"`,
     );
     this.logger.info(
-      `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}, testMode=${this.isTestMode}`,
+      `メッセージ判定: author.bot=${isBot}, isOwnMessage=${isOwnMessage}, hasMention=${hasMention}`,
     );
   }
 
@@ -80,13 +79,5 @@ export class MessageProcessingRules {
    */
   updateBotId(newBotId: string): void {
     this.botId = newBotId;
-  }
-
-  /**
-   * テストモードを設定
-   * @param isTestMode テストモードの有効/無効
-   */
-  setTestMode(isTestMode: boolean): void {
-    this.isTestMode = isTestMode;
   }
 }
