@@ -50,11 +50,6 @@ async function main(): Promise<void> {
 
   const bot = new DiscordBot();
 
-  // テストモード設定
-  if (isTestMode) {
-    bot.setTestMode(true);
-  }
-
   // 開発時用のタイムアウト機能（--timeout オプション指定時）
   // 運用時はタイムアウトなしで永続実行
   if (timeoutSeconds) {

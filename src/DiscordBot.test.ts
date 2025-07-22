@@ -158,26 +158,6 @@ Deno.test("DiscordBot", async (t) => {
     });
   });
 
-  await t.step("テストモード", async (t) => {
-    const bot = new DiscordBot();
-
-    await t.step("テストモードの設定", () => {
-      // setTestModeメソッドの存在と基本動作を確認
-      assertEquals(typeof bot.setTestMode, "function");
-
-      // エラーが発生しないことを確認
-      bot.setTestMode(true);
-      bot.setTestMode(false);
-    });
-
-    await t.step("messageProcessorへの伝播", () => {
-      // messageProcessorはprivateフィールドのため直接アクセス不可
-      // setTestMode呼び出し時にエラーが発生しないことで間接確認
-      bot.setTestMode(true);
-      assertExists(bot);
-    });
-  });
-
   await t.step("getClient", async (t) => {
     const bot = new DiscordBot();
 

@@ -10,7 +10,6 @@ import { PromptBuilder } from "../rules/PromptBuilder.ts";
  */
 export class MessageProcessor {
   private logger: Logger;
-  private isTestMode: boolean = false;
   private promptBuilder: PromptBuilder;
 
   /**
@@ -28,14 +27,6 @@ export class MessageProcessor {
    */
   buildPrompt(context: ThreadContext): string {
     return this.promptBuilder.buildPrompt(context);
-  }
-
-  /**
-   * テストモードを設定
-   * @param isTestMode テストモードの有効/無効
-   */
-  setTestMode(isTestMode: boolean): void {
-    this.isTestMode = isTestMode;
   }
 
   /**
@@ -181,14 +172,8 @@ export class MessageProcessor {
     this.logger.info("Discordに応答を送信中");
 
     try {
-      // テストモード時はBot間の無限ループを防ぐためメンションなしで応答
-      // 通常時は発言者にメンションを付けて応答
-      const finalResponse = this.isTestMode
-        ? response
-        : `<@${msg.author.id}> ${response}`;
-
-      if (finalResponse.length <= CONFIG.MAX_MESSAGE_LENGTH) {
-        await msg.reply(finalResponse);
+      if (response.length <= CONFIG.MAX_MESSAGE_LENGTH) {
+        await msg.reply(response);
       } else {
         await this.sendSplitMessage(msg, response);
       }
@@ -214,10 +199,7 @@ export class MessageProcessor {
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      // テストモード時はメンションなし、通常時はメンション付き
-      const prefix = i === 0
-        ? (this.isTestMode ? "" : `<@${msg.author.id}> `)
-        : "(続き) ";
+      const prefix = i === 0 ? "" : "(続き) ";
 
       if (i === 0) {
         await msg.reply(prefix + chunk);

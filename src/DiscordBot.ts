@@ -20,8 +20,6 @@ export class DiscordBot {
   private logger: Logger;
   /** メッセージ処理判定ルール */
   private messageRules: MessageProcessingRules;
-  /** テストモードフラグ */
-  private isTestMode: boolean = false;
   /** 処理中のメッセージIDを追跡（重複防止用） */
   private processingMessages = new Set<string>();
   /** 最後のメッセージ送信時刻（レート制限用） */
@@ -195,15 +193,5 @@ export class DiscordBot {
    */
   getClient(): Client {
     return this.client;
-  }
-
-  /**
-   * テストモードを設定
-   * @param isTestMode テストモードの有効/無効
-   */
-  setTestMode(isTestMode: boolean): void {
-    this.isTestMode = isTestMode;
-    this.messageProcessor.setTestMode(isTestMode);
-    this.logger.info(`テストモード設定: ${isTestMode}`);
   }
 }
