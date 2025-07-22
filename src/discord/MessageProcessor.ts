@@ -163,11 +163,8 @@ export class MessageProcessor {
     this.logger.info("Discordに応答を送信中");
 
     try {
-      if (response.length <= CONFIG.MAX_MESSAGE_LENGTH) {
-        await msg.reply(response);
-      } else {
-        await this.sendSplitMessage(msg, response);
-      }
+      const chunks = MessageSplitter.split(response, CONFIG.MAX_MESSAGE_LENGTH);
+      await this.sendMultipleMessages(msg, chunks);
 
       this.logger.info("応答を正常に送信しました");
     } catch (error) {
@@ -177,17 +174,15 @@ export class MessageProcessor {
   }
 
   /**
-   * 長い応答を複数のメッセージに分割して送信する内部メソッド
+   * 複数のメッセージに分割して送信する内部メソッド
    * 最初のメッセージにのみメンションを付け、後続は「(続き)」プレフィックスを使用
    * @param msg 元のメッセージ
-   * @param response 分割する応答内容
+   * @param chunks 分割済みのメッセージ配列
    */
-  private async sendSplitMessage(
+  private async sendMultipleMessages(
     msg: Message,
-    response: string,
+    chunks: string[],
   ): Promise<void> {
-    const chunks = MessageSplitter.split(response, CONFIG.MAX_MESSAGE_LENGTH);
-
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       const prefix = i === 0 ? "" : "(続き) ";
